@@ -1,0 +1,51 @@
+@extends('adminlte::page')
+
+@section('title', 'Manajemen Prioritas')
+
+@section('content_header')
+    <div class="d-flex justify-content-between">
+        <h1>Manajemen Prioritas</h1>
+        <a href="{{ route('admin.priorities.create') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Tambah Prioritas</a>
+    </div>
+@stop
+
+@section('content')
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+    <div class="card">
+        <div class="card-body p-0">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nama Prioritas</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($priorities as $priority)
+                    <tr>
+                        <td>{{ $priority->id }}</td>
+                        <td>{{ $priority->priority_name }}</td>
+                        <td>
+                            <a href="{{ route('admin.priorities.edit', $priority) }}" class="btn btn-sm btn-warning">Edit</a>
+                            <form action="{{ route('admin.priorities.destroy', $priority) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus prioritas ini?');">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-danger">Hapus</button>
+                            </form>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="3" class="text-center">Tidak ada data.</td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer clearfix">
+            {{ $priorities->links() }}
+        </div>
+    </div>
+@stop

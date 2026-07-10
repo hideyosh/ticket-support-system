@@ -6,28 +6,48 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 #[Fillable('ticket_number', 'title', 'description', 'category_id',
 'priority_id', 'status', 'created_by', 'assigned_to', 'due_date', 'resolved_at', 'closed_at')]
 class Ticket extends Model
 {
-    public function creator() : BelongsTo {
+    protected function casts(): array
+    {
+        return [
+            'due_date'    => 'datetime',
+            'resolved_at' => 'datetime',
+            'closed_at'   => 'datetime',
+        ];
+    }
+
+    public function creator(): BelongsTo
+    {
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function assignedAgent() : BelongsTo {
+    public function assignedAgent(): BelongsTo
+    {
         return $this->belongsTo(User::class, 'assigned_to');
     }
 
-    public function category() : BelongsTo {
+    public function category(): BelongsTo
+    {
         return $this->belongsTo(Category::class, 'category_id');
     }
 
-    public function priority() : BelongsTo {
+    public function priority(): BelongsTo
+    {
         return $this->belongsTo(Priority::class, 'priority_id');
     }
 
-    public function comments() : HasMany {
+    public function comments(): HasMany
+    {
         return $this->hasMany(Comment::class, 'ticket_id');
+    }
+
+    public function labels(): BelongsToMany
+    {
+        return $this->belongsToMany(Label::class, 'ticket_label', 'ticket_id', 'label_id');
     }
 }
