@@ -11,15 +11,33 @@ use Illuminate\Support\Arr;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(\Illuminate\Http\Request $request)
     {
-        $users = User::with('role')->latest()->paginate(15);
-        return view('admin.users.index', compact('users'));
+        $roleIds = array_filter(explode(',', (string) $request->input('role_id')));
+
+        $query = User::with('role')
+            ->select('users.*')
+            ->leftJoin('roles', 'users.role_id', '=', 'roles.id')
+            ->where('users.id', '!=', auth()->id());
+
+        if (!empty($roleIds)) {
+            $query->whereIn('users.role_id', $roleIds);
+        }
+
+        $users = $query->orderBy('roles.role_name', 'asc')
+            ->orderBy('users.created_at', 'desc')
+            ->paginate(15)
+            ->withQueryString();
+
+        $roles = Role::all();
+
+        return view('admin.users.index', compact('users', 'roles'));
     }
+
 
     public function create()
     {
-        $roles = Role::select('id', 'name')->get();
+        $roles = Role::all();
         // $teams = Team::select('id', 'name')->get(); // If teams exist
         return view('admin.users.create', compact('roles'));
     }
@@ -28,9 +46,9 @@ class UserController extends Controller
     {
         $validated = $request->validated();
         $validated['password'] = Hash::make($validated['password']);
-        
+
         User::create($validated);
-        
+
         return redirect()->route('admin.users.index')->with('success', 'User berhasil dibuat.');
     }
 
@@ -42,14 +60,14 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
-        $roles = Role::select('id', 'name')->get();
+        $roles = Role::all();
         return view('admin.users.edit', compact('user', 'roles'));
     }
 
     public function update(UserRequest $request, User $user)
     {
         $validated = $request->validated();
-        
+
         if (empty($validated['password'])) {
             $validated = Arr::except($validated, ['password']);
         } else {
@@ -57,7 +75,7 @@ class UserController extends Controller
         }
 
         $user->update($validated);
-        
+
         return redirect()->route('admin.users.index')->with('success', 'User berhasil diperbarui.');
     }
 

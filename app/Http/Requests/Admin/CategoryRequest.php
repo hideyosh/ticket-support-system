@@ -17,11 +17,11 @@ class CategoryRequest extends FormRequest
         $categoryId = $this->route('category')?->id;
 
         return [
-            'name' => [
+            'category_name' => [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('categories', 'name')->ignore($categoryId),
+                Rule::unique('categories', 'category_name')->ignore($categoryId),
             ],
         ];
     }

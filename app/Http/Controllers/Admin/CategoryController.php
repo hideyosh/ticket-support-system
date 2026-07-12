@@ -11,6 +11,7 @@ class CategoryController extends Controller
     public function index()
     {
         $categories = Category::latest()->paginate(15);
+
         return view('admin.categories.index', compact('categories'));
     }
 
@@ -22,7 +23,10 @@ class CategoryController extends Controller
     public function store(CategoryRequest $request)
     {
         Category::create($request->validated());
-        return redirect()->route('admin.categories.index')->with('success', 'Kategori berhasil dibuat.');
+
+        return redirect()
+            ->route('admin.categories.index')
+            ->with('success', 'Kategori berhasil dibuat.');
     }
 
     public function show(Category $category)
@@ -38,12 +42,18 @@ class CategoryController extends Controller
     public function update(CategoryRequest $request, Category $category)
     {
         $category->update($request->validated());
-        return redirect()->route('admin.categories.index')->with('success', 'Kategori berhasil diperbarui.');
+
+        return redirect()
+            ->route('admin.categories.index')
+            ->with('success', 'Kategori berhasil diperbarui.');
     }
 
     public function destroy(Category $category)
     {
         $category->delete();
-        return redirect()->route('admin.categories.index')->with('success', 'Kategori berhasil dihapus.');
+
+        return redirect()
+            ->route('admin.categories.index')
+            ->with('success', 'Kategori berhasil dihapus.');
     }
 }

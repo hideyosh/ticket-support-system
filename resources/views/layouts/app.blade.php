@@ -17,9 +17,9 @@
 <body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
     <div class="app-wrapper">
 
-        @include('layouts.navigation')
+        @include('partials.navigation')
 
-        @include('layouts.sidebar')
+        @include('partials.sidebar')
 
         <!-- Main content -->
         <main class="app-main">
