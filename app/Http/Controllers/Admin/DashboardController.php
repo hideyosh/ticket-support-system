@@ -30,10 +30,10 @@ class DashboardController extends Controller
             ->groupBy('status')
             ->get();
 
-        $ticketsByPriority = Priority::withCount('ticket')
+        $ticketsByPriority = Priority::withCount('tickets')
             ->get();
 
-        $ticketsByCategory = Category::withCount('ticket')
+        $ticketsByCategory = Category::withCount('tickets')
             ->get();
 
         $topAgents         = User::whereHas('role', fn($q) => $q->where('role_name', 'agent'))

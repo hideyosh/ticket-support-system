@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable('category_name')]
 class Category extends Model
 {
-    public function ticket() : HasMany {
+    public function tickets() : HasMany {
         return $this->hasMany(Ticket::class, 'category_id');
     }
 }

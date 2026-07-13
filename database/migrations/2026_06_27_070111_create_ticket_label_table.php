@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('ticket_label', function (Blueprint $table) {
             $table->id();
             $table->foreignId('ticket_id')->constrained('tickets', 'id')->onDelete('cascade');
-            $table->foreignId('label_id')->constrained('labels', 'id')->onDelete('cascade');
+            $table->foreignId('label_id')->constrained('labels', 'id')->onDelete('restrict');
             $table->timestamps();
         });
     }

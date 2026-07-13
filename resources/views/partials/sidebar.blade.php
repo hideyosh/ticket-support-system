@@ -2,8 +2,7 @@
 
     {{-- Brand --}}
     <div class="sidebar-brand">
-        {{-- <a href="{{ route('admin.dashboard') }}" class="brand-link"> --}}
-        <a href="#" class="brand-link">
+        <a href="{{ route(auth()->user()->dashboardRoute()) }}" class="brand-link">
             <span class="brand-text fw-semibold">My Helpdesk</span>
         </a>
     </div>
@@ -14,7 +13,6 @@
 
                 {{-- Dashboard --}}
                 <li class="nav-item">
-                    {{-- <a href="{{ route('admin.dashboard') }}" --}}
                     <a href="{{ route(auth()->user()->dashboardRoute()) }}"
                         class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                         <i class="nav-icon bi bi-speedometer2"></i>
@@ -116,12 +114,11 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            {{-- <a href="{{ route('admin.teams.index') }}" --}}
-                            <a href="#"
+                            <a href="{{ route('admin.teams.index') }}"
                                 class="nav-link {{ request()->routeIs('admin.teams.*') ? 'active' : '' }}">
                                 <i class="nav-icon bi bi-circle"></i>
                                 <p>Tim</p>
-                            </a>
+                            <a/>
                         </li>
                     </ul>
                 </li>
