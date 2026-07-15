@@ -1,17 +1,16 @@
 @extends('layouts.app')
 @section('content')
-    <div class="app-content-header">
+    <div class="app-content-header mb-3">
         <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h3 class="mb-0">Data User</h3>
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div>
+                    <h3 class="mb-1 fw-bold">Data User</h3>
+                    <p class="text-muted small mb-0">Kelola akun pengguna dan hak akses</p>
                 </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-end">
-                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">User</li>
-                    </ol>
-                </div>
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{{ auth()->user()->dashboardRoute() }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active">User</li>
+                </ol>
             </div>
         </div>
     </div>
@@ -22,57 +21,60 @@
                 $activeRoleIds = array_filter(explode(',', (string) request('role_id')));
             @endphp
 
-            <div class="card card-primary card-outline">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-users me-1"></i>
-                        Daftar User
-                    </h3>
-                    <div class="card-tools d-flex gap-2 align-items-center">
-                        <div class="dropdown">
-                            <button class="btn btn-light btn-sm dropdown-toggle border" type="button" id="filterDropdown"
-                                data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
-                                <i class="fas fa-filter text-muted me-1"></i> Filter
-                                @if (count($activeRoleIds) > 0)
-                                    <span class="badge bg-primary ms-1 rounded-pill">{{ count($activeRoleIds) }}</span>
-                                @endif
-                            </button>
-                            <div class="dropdown-menu dropdown-menu-end p-3 shadow" aria-labelledby="filterDropdown"
-                                style="min-width: 240px;">
-                                <form action="{{ route('admin.users.index') }}" method="GET" id="filterForm"
-                                    class="m-0">
-                                    <input type="hidden" name="role_id" id="role_id_combined"
-                                        value="{{ request('role_id') }}">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-transparent border-0 px-3 pt-3 pb-1">
+                    <div class="d-flex flex-wrap justify-content-between  align-items-center gap-2">
+                        <h3 class="card-title mb-0 fw-semibold">
+                            <i class="bi bi-people me-1"></i>
+                            Daftar User
+                        </h3>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="dropdown">
+                                <button class="btn btn-light btn-sm dropdown-toggle border" type="button"
+                                    id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false"
+                                    data-bs-auto-close="outside">
+                                    <i class="fas fa-filter text-muted me-1"></i> Filter
+                                    @if (count($activeRoleIds) > 0)
+                                        <span class="badge bg-primary ms-1 rounded-pill">{{ count($activeRoleIds) }}</span>
+                                    @endif
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-end p-3 shadow" aria-labelledby="filterDropdown"
+                                    style="min-width: 240px;">
+                                    <form action="{{ route('admin.users.index') }}" method="GET" id="filterForm"
+                                        class="m-0">
+                                        <input type="hidden" name="role_id" id="role_id_combined"
+                                            value="{{ request('role_id') }}">
 
-                                    <h6 class="dropdown-header px-0 text-dark fw-bold border-bottom pb-2 mb-2">Berdasarkan
-                                        Role</h6>
+                                        <h6 class="dropdown-header px-0 text-dark fw-bold border-bottom pb-2 mb-2">
+                                            Berdasarkan
+                                            Role</h6>
 
-                                    <div class="mb-3">
-                                        @foreach ($roles as $role)
-                                            <div class="form-check mb-2">
-                                                <input class="form-check-input role-filter-checkbox" type="checkbox"
-                                                    id="role_{{ $role->id }}" value="{{ $role->id }}"
-                                                    {{ in_array((string) $role->id, $activeRoleIds) ? 'checked' : '' }}>
-                                                <label class="form-check-label" style="font-size: 0.875rem;"
-                                                    for="role_{{ $role->id }}">
-                                                    {{ ucfirst($role->role_name) }}
-                                                </label>
-                                            </div>
-                                        @endforeach
-                                    </div>
+                                        <div class="mb-3">
+                                            @foreach ($roles as $role)
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input role-filter-checkbox" type="checkbox"
+                                                        id="role_{{ $role->id }}" value="{{ $role->id }}"
+                                                        {{ in_array((string) $role->id, $activeRoleIds) ? 'checked' : '' }}>
+                                                    <label class="form-check-label" style="font-size: 0.875rem;"
+                                                        for="role_{{ $role->id }}">
+                                                        {{ ucfirst($role->role_name) }}
+                                                    </label>
+                                                </div>
+                                            @endforeach
+                                        </div>
 
-                                    <div class="d-flex justify-content-between pt-2 border-top">
-                                        <a href="{{ route('admin.users.index') }}"
-                                            class="btn btn-light btn-sm text-danger">Reset</a>
-                                        <button type="submit" class="btn btn-primary btn-sm px-3">Terapkan</button>
-                                    </div>
-                                </form>
+                                        <div class="d-flex justify-content-between pt-2 border-top">
+                                            <a href="{{ route('admin.users.index') }}"
+                                                class="btn btn-light btn-sm text-danger">Reset</a>
+                                            <button type="submit" class="btn btn-primary btn-sm px-3">Terapkan</button>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
+                            <a href="{{ route('admin.users.create') }}" class="btn btn-primary btn-sm text-nowrap">
+                                <i class="fas fa-plus"></i> Tambah User
+                            </a>
                         </div>
-
-                        <a href="{{ route('admin.users.create') }}" class="btn btn-primary btn-sm text-nowrap">
-                            <i class="fas fa-plus"></i> Tambah User
-                        </a>
                     </div>
                 </div>
 
@@ -84,7 +86,7 @@
                         </div>
                     @endif
 
-                    <table class="table table-bordered table-striped table-hover mb-0">
+                    <table class="table table-hover align-middle mb-0">
                         <thead>
                             <tr>
                                 <th style="width: 50px;" class="text-center">No</th>

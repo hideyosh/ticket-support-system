@@ -1,31 +1,29 @@
 @extends('layouts.app')
 @section('content')
-    <div class="app-content-header">
+    <div class="app-content-header mb-3">
         <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h3 class="mb-0">Data Label</h3>
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div>
+                    <h3 class="mb-1 fw-bold">Data Label</h3>
+                    <p class="text-muted small mb-0">Kelola label untuk mengelompokkan tiket</p>
                 </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-end">
-                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Label</li>
-                    </ol>
-                </div>
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{{ auth()->user()->dashboardRoute() }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Label</li>
+                </ol>
             </div>
         </div>
     </div>
 
     <div class="app-content">
         <div class="container-fluid">
-
-            <div class="card card-primary card-outline">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-list me-1"></i>
-                        Daftar Label
-                    </h3>
-                    <div class="card-tools">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-transparent border-0 px-3 pt-3 pb-1">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <h3 class="card-title mb-0 fw-semibold">
+                            <i class="bi bi-bookmark me-1"></i>
+                            Daftar Label
+                        </h3>
                         <a href="{{ route('admin.labels.create') }}" class="btn btn-primary btn-sm">
                             <i class="fas fa-plus"></i> Tambah Label
                         </a>
@@ -40,7 +38,7 @@
                         </div>
                     @endif
 
-                    <table class="table table-bordered table-striped table-hover mb-0">
+                    <table class="table table-hover align-middle mb-0">
                         <thead>
                             <tr>
                                 <th style="width: 50px;" class="text-center">No</th>

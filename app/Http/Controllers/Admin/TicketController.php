@@ -4,124 +4,261 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\TicketRequest;
-use App\Models\Ticket;
 use App\Models\Category;
-use App\Models\Priority;
 use App\Models\Label;
+use App\Models\Priority;
+use App\Models\Ticket;
+use App\Models\SlaRule;
 use App\Models\User;
+use App\Services\TicketSlaService;
 use App\Services\TicketStatusService;
 use App\Exceptions\InvalidStatusTransitionException;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
+use Illuminate\View\View;
 
 class TicketController extends Controller
 {
-    public function index()
+    // =========================================================================
+    // CRUD Utama
+    // =========================================================================
+
+    /**
+     * Tampilkan semua tiket dengan filter opsional.
+     */
+    public function index(Request $request): View
     {
-        $tickets = Ticket::with(['creator', 'assignedAgent', 'category', 'priority', 'labels'])->latest()->paginate(15);
-        return view('admin.tickets.index', compact('tickets'));
-    }
+        $query = Ticket::with(['creator', 'assignedAgent', 'category', 'priority', 'labels']);
 
-    public function create()
-    {
-        $categories = Category::select('id', 'name')->get();
-        $priorities = Priority::select('id', 'priority_name')->get();
-        return view('admin.tickets.create', compact('categories', 'priorities'));
-    }
-
-    public function store(TicketRequest $request)
-    {
-        $validated = $request->validated();
-        $validated['ticket_number'] = 'TKT-' . strtoupper(Str::random(8));
-        $validated['created_by'] = auth()->id();
-        $validated['status'] = 'open';
-
-        Ticket::create($validated);
-        
-        return redirect()->route('admin.tickets.index')->with('success', 'Tiket berhasil dibuat.');
-    }
-
-    public function show(Request $request, Ticket $ticket, TicketStatusService $ticketStatusService)
-    {
-        // Handle POST tambah komentar
-        if ($request->isMethod('POST') && $request->has('_add_comment')) {
-            $request->validate([
-                'body' => 'required|string',
-            ]);
-
-            $ticket->comments()->create([
-                'user_id' => auth()->id(),
-                'body'    => $request->body,
-                'type'    => $request->type === 'internal_note' ? 'internal_note' : 'public_comment',
-            ]);
-
-            return redirect()->back()->with('success', 'Komentar berhasil ditambahkan.');
+        // Filter: pencarian no. tiket / judul
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('ticket_number', 'like', "%{$search}%")
+                    ->orWhere('title', 'like', "%{$search}%");
+            });
         }
 
+        // Filter: status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter: prioritas
+        if ($request->filled('priority_id')) {
+            $query->where('priority_id', $request->priority_id);
+        }
+
+        // Filter: kategori
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        $tickets    = $query->latest()->paginate(15)->withQueryString();
+        $categories = Category::select('id', 'category_name')->orderBy('category_name')->get();
+        $priorities = Priority::select('id', 'priority_name')->get();
+
+        return view('admin.tickets.index', compact('tickets', 'categories', 'priorities'));
+    }
+
+    /**
+     * Tampilkan form buat tiket baru.
+     */
+    public function create(): View
+    {
+        $categories = Category::select('id', 'category_name')->orderBy('category_name')->get();
+        $priorities = Priority::select('id', 'priority_name')->get();
+        $labels     = Label::select('id', 'label_name')->orderBy('label_name')->get();
+
+        return view('admin.tickets.create', compact('categories', 'priorities', 'labels'));
+    }
+
+    /**
+     * Simpan tiket baru ke database.
+     * ticket_number di-generate otomatis; created_by = user yang sedang login.
+     */
+    public function store(TicketRequest $request, TicketSlaService $slaService): RedirectResponse
+    {
+        $validated = $request->validated();
+        $year = now()->year;
+        $count = Ticket::whereYear('created_at', $year)->count() + 1;
+        $validated['ticket_number'] = 'TCK-' . $year . '-' . str_pad($count, 6, '0', STR_PAD_LEFT);
+        $validated['created_by'] = auth()->id();
+        // status tetap tidak usah diisi manual, biar default migration yang isi 'open'
+
+        $slaRule = SlaRule::where('priority_id', $validated['priority_id'])->first();
+
+        if ($slaRule) {
+            // karena ticket baru, status pasti 'open' (sesuai default migration)
+            $validated['due_date'] = $slaService->calculateDueDate(now(), $slaRule, 'open');
+        } else {
+            $validated['due_date'] = null;
+        }
+
+        $ticket = Ticket::create($validated);
+        $ticket->labels()->sync($request->labels ?? []);
+
+        return redirect()
+            ->route('admin.tickets.index')
+            ->with('success', "Tiket {$ticket->ticket_number} berhasil dibuat.");
+    }
+
+    /**
+     * Tampilkan detail tiket.
+     */
+    public function show(Ticket $ticket, TicketStatusService $ticketStatusService): View
+    {
         $ticket->load(['creator', 'assignedAgent', 'category', 'priority', 'labels', 'comments.user']);
 
-        $agents = User::whereHas('role', function ($q) {
-            $q->where('name', 'agent');
-        })->select('id', 'name')->get();
+        $agents = User::whereHas('role', fn($q) => $q->where('role_name', 'agent'))
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
 
-        $allLabels = Label::select('id', 'label_name')->get();
-
+        $allLabels      = Label::select('id', 'label_name')->orderBy('label_name')->get();
         $allowedStatuses = $ticketStatusService->allowedTransitions($ticket->status);
+        $statusColorMap  = $ticketStatusService->statusColorMap();
 
-        return view('admin.tickets.show', compact('ticket', 'agents', 'allLabels', 'allowedStatuses'));
+        return view('admin.tickets.show', compact(
+            'ticket',
+            'agents',
+            'allLabels',
+            'allowedStatuses',
+            'statusColorMap',
+        ));
     }
 
-    public function edit(Ticket $ticket)
+    /**
+     * Tampilkan form edit tiket.
+     */
+    public function edit(Ticket $ticket): View
     {
-        $categories = Category::select('id', 'name')->get();
+        $ticket->load('labels');
+
+        $categories = Category::select('id', 'category_name')->orderBy('category_name')->get();
         $priorities = Priority::select('id', 'priority_name')->get();
-        return view('admin.tickets.edit', compact('ticket', 'categories', 'priorities'));
+        $labels     = Label::select('id', 'label_name')->orderBy('label_name')->get();
+
+        return view('admin.tickets.edit', compact('ticket', 'categories', 'priorities', 'labels'));
     }
 
-    public function update(TicketRequest $request, Ticket $ticket)
+    /**
+     * Update data tiket (title, description, category, priority, due_date, labels).
+     * ticket_number & created_by TIDAK boleh diubah dari sini.
+     */
+    public function update(TicketRequest $request, Ticket $ticket, TicketSlaService $slaService): RedirectResponse
     {
-        $ticket->update($request->validated());
-        return redirect()->route('admin.tickets.index')->with('success', 'Tiket berhasil diperbarui.');
+        $validated = $request->validated();
+
+        $statusChanged = isset($validated['status']) && $validated['status'] !== $ticket->status;
+        $priorityChanged = isset($validated['priority_id']) && $validated['priority_id'] !== $ticket->priority_id;
+
+        if ($statusChanged || $priorityChanged) {
+            $slaRule = SlaRule::where('priority_id', $validated['priority_id'])->first();
+
+            if ($slaRule) {
+                $status = $validated['status'] ?? $ticket->status;
+                $validated['due_date'] = $slaService->calculateDueDate(now(), $slaRule, $status);
+            } else {
+                $validated['due_date'] = null;
+            }
+        }
+        // kalau status & priority TIDAK berubah, due_date TIDAK disentuh sama sekali
+        // (tidak dimasukkan ke $validated, jadi $ticket->update() tidak akan menimpanya)
+
+        $ticket->update($validated);
+
+        $ticket->labels()->sync($request->labels ?? []);
+
+        return redirect()
+            ->route('admin.tickets.show', $ticket)
+            ->with('success', 'Tiket berhasil diperbarui.');
     }
 
-    public function destroy(Ticket $ticket)
+    /**
+     * Hapus tiket beserta relasinya (cascade di DB).
+     */
+    public function destroy(Ticket $ticket): RedirectResponse
     {
+        $ticketNumber = $ticket->ticket_number;
         $ticket->delete();
-        return redirect()->route('admin.tickets.index')->with('success', 'Tiket berhasil dihapus.');
+
+        return redirect()
+            ->route('admin.tickets.index')
+            ->with('success', "Tiket {$ticketNumber} berhasil dihapus.");
     }
 
-    public function assign(Request $request, Ticket $ticket)
-    {
+    // =========================================================================
+    // Assign / Reassign
+    // =========================================================================
+
+    /**
+     * Assign atau reassign agent ke tiket.
+     * Hanya admin/supervisor yang boleh melakukan ini (dilindungi middleware role:admin).
+     * Side-effect: jika tiket berstatus 'open' dan agent di-assign, status otomatis → 'assigned'.
+     *              jika agent di-unassign dan status 'assigned', status otomatis → 'open'.
+     */
+    public function assign(
+        Request $request,
+        Ticket $ticket,
+        TicketStatusService $ticketStatusService
+    ): RedirectResponse {
         $request->validate([
             'assigned_to' => [
-                'nullable', 
+                'nullable',
                 'exists:users,id',
                 function ($attribute, $value, $fail) {
-                    if ($value) {
-                        $isAgent = User::where('id', $value)->whereHas('role', function($q) {
-                            $q->where('name', 'agent');
-                        })->exists();
-                        if (!$isAgent) {
-                            $fail('User yang dipilih bukan agent.');
-                        }
+                    if (
+                        $value && !User::where('id', $value)
+                            ->whereHas('role', fn($q) => $q->where('role_name', 'agent'))
+                            ->exists()
+                    ) {
+                        $fail('User yang dipilih bukan agent.');
                     }
-                }
+                },
             ],
         ]);
 
-        $ticket->update([
-            'assigned_to' => $request->assigned_to,
-        ]);
+        $previousStatus = $ticket->status;
+        $newAgentId     = $request->assigned_to;
 
-        // Secara opsional, jika status open, otomatis jadi assigned? (Tidak diminta secara eksplisit)
+        $ticket->update(['assigned_to' => $newAgentId]);
 
-        return redirect()->back()->with('success', 'Agent berhasil di-assign ke tiket.');
+        // Auto-transition: open → assigned saat agent di-assign
+        if ($newAgentId && $previousStatus === 'open') {
+            try {
+                $ticketStatusService->transition($ticket, 'assigned');
+            } catch (InvalidStatusTransitionException) {
+                // Tidak hentikan proses; assign tetap berhasil
+            }
+        }
+
+        // Auto-revert: assigned → open saat agent di-unassign
+        if (!$newAgentId && $previousStatus === 'assigned') {
+            $ticket->update(['status' => 'open']);
+        }
+
+        $message = $newAgentId
+            ? 'Agent berhasil di-assign ke tiket.'
+            : 'Agent berhasil di-unassign dari tiket.';
+
+        return redirect()->back()->with('success', $message);
     }
 
-    public function status(Request $request, Ticket $ticket, TicketStatusService $ticketStatusService)
-    {
+    // =========================================================================
+    // Status Transition
+    // =========================================================================
+
+    /**
+     * Ubah status tiket dengan validasi transisi ketat via TicketStatusService.
+     */
+    public function status(
+        Request $request,
+        Ticket $ticket,
+        TicketStatusService $ticketStatusService
+    ): RedirectResponse {
         $request->validate([
-            'status' => 'required|string',
+            'status' => ['required', 'string'],
         ]);
 
         try {
@@ -132,15 +269,46 @@ class TicketController extends Controller
         }
     }
 
-    public function labels(Request $request, Ticket $ticket)
+    // =========================================================================
+    // Labels
+    // =========================================================================
+
+    /**
+     * Sync label pada tiket.
+     */
+    public function labels(Request $request, Ticket $ticket): RedirectResponse
     {
         $request->validate([
-            'labels' => 'array',
-            'labels.*' => 'exists:labels,id',
+            'labels'   => ['nullable', 'array'],
+            'labels.*' => ['exists:labels,id'],
         ]);
 
         $ticket->labels()->sync($request->labels ?? []);
-        
+
         return redirect()->back()->with('success', 'Label tiket berhasil diperbarui.');
+    }
+
+    // =========================================================================
+    // Comments & Internal Notes
+    // =========================================================================
+
+    /**
+     * Tambah komentar publik atau internal note ke tiket.
+     * Internal note hanya boleh dilihat oleh agent/supervisor/admin (ditangani di view).
+     */
+    public function storeComment(Request $request, Ticket $ticket): RedirectResponse
+    {
+        $request->validate([
+            'body' => ['required', 'string', 'max:5000'],
+            'type' => ['nullable', 'in:public_comment,internal_note'],
+        ]);
+
+        $ticket->comments()->create([
+            'user_id' => auth()->id(),
+            'body'    => $request->body,
+            'type'    => $request->type === 'internal_note' ? 'internal_note' : 'public_comment',
+        ]);
+
+        return redirect()->back()->with('success', 'Komentar berhasil ditambahkan.');
     }
 }

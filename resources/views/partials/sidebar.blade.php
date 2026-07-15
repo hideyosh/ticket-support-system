@@ -32,12 +32,11 @@
                     </a>
                     <ul class="nav nav-treeview">
                         <li class="nav-item">
-                            {{-- <a href="{{ route('admin.tickets.index') }}" --}}
-                            <a href="#"
+                            <a href="{{ route('admin.tickets.index') }}"
                                 class="nav-link {{ request()->routeIs('admin.tickets.index') ? 'active' : '' }}">
                                 <i class="nav-icon bi bi-circle"></i>
                                 <p>Tiket</p>
-                            </a>
+                            <a/>
                         </li>
                     </ul>
                 </li>

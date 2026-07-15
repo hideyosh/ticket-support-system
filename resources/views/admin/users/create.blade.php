@@ -8,7 +8,7 @@
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-end">
-                    <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{{ auth()->user()->dashboardRoute() }}">Home</a></li>
                     <li class="breadcrumb-item"><a href="{{ route('admin.users.index') }}">User</a></li>
                     <li class="breadcrumb-item active">Tambah</li>
                 </ol>
@@ -41,13 +41,13 @@
                         <input type="email" name="email" id="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email') }}" placeholder="Masukkan email" required>
                         @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="password" class="form-label">Password</label>
                         <input type="password" name="password" id="password" class="form-control @error('password') is-invalid @enderror" placeholder="Masukkan password" required>
                         @error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="password_confirmation" class="form-label">Konfirmasi Password</label>
                         <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" placeholder="Ulangi password" required>

@@ -1,197 +1,200 @@
-@extends('adminlte::page')
-
-@section('title', 'Detail Tiket — ' . $ticket->ticket_number)
-
-@section('content_header')
-    <div class="d-flex justify-content-between align-items-center">
-        <h1>Detail Tiket — <strong>{{ $ticket->ticket_number }}</strong></h1>
-        <a href="{{ route('admin.tickets.index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Kembali</a>
-    </div>
-@stop
+@extends('layouts.app')
 
 @section('content')
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible">
-            <button type="button" class="close" data-dismiss="alert">&times;</button>
-            {{ session('success') }}
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="alert alert-danger alert-dismissible">
-            <button type="button" class="close" data-dismiss="alert">&times;</button>
-            {{ session('error') }}
-        </div>
-    @endif
 
-    <div class="row">
-        {{-- Kolom Kiri: Info Tiket --}}
-        <div class="col-md-8">
-            {{-- Informasi Tiket --}}
-            <div class="card card-primary">
-                <div class="card-header">
-                    <h3 class="card-title">{{ $ticket->title }}</h3>
-                </div>
-                <div class="card-body">
-                    <p>{{ $ticket->description }}</p>
-                    <hr>
-                    <div class="row">
-                        <div class="col-sm-6">
-                            <strong>Kategori:</strong> {{ $ticket->category->name ?? '-' }}<br>
-                            <strong>Prioritas:</strong> {{ $ticket->priority->priority_name ?? '-' }}<br>
-                            <strong>Dibuat oleh:</strong> {{ $ticket->creator->name ?? '-' }}<br>
-                            <strong>Dibuat pada:</strong> {{ $ticket->created_at->format('d/m/Y H:i') }}<br>
-                        </div>
-                        <div class="col-sm-6">
-                            <strong>Agent:</strong> {{ $ticket->assignedAgent->name ?? '<em>Belum ditugaskan</em>' }}<br>
-                            <strong>Tenggat:</strong>
-                            @if($ticket->due_date)
-                                {{ $ticket->due_date->format('d/m/Y H:i') }}
-                            @else
-                                -
-                            @endif<br>
-                            <strong>Diselesaikan:</strong> {{ $ticket->resolved_at ? $ticket->resolved_at->format('d/m/Y H:i') : '-' }}<br>
-                            <strong>Ditutup:</strong> {{ $ticket->closed_at ? $ticket->closed_at->format('d/m/Y H:i') : '-' }}<br>
+<div class="app-content-header mb-3">
+    <div class="container-fluid">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+            <div>
+                <h3 class="mb-1 fw-bold">Detail Tiket</h3>
+                <p class="text-muted small mb-0">Pantau informasi tiket dan kelola penugasan agent.</p>
+            </div>
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ route(auth()->user()->dashboardRoute()) }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('admin.tickets.index') }}">Tiket</a></li>
+                <li class="breadcrumb-item active">{{ $ticket->ticket_number }}</li>
+            </ol>
+        </div>
+    </div>
+</div>
+
+<div class="app-content">
+    <div class="container-fluid">
+
+        @if (session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle-fill me-1"></i> {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+        @if (session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-header bg-transparent border-0 px-3 pt-3 pb-2">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                            <h3 class="card-title fw-semibold mb-0">
+                                <i class="bi bi-ticket-detailed-fill me-2"></i> Informasi Tiket
+                            </h3>
+                            <div class="d-flex flex-wrap gap-2">
+                                <a href="{{ route('admin.tickets.edit', $ticket) }}" class="btn btn-warning btn-sm">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </a>
+                                <a href="{{ route('admin.tickets.index') }}" class="btn btn-outline-secondary btn-sm">
+                                    <i class="bi bi-arrow-left"></i> Kembali
+                                </a>
+                            </div>
                         </div>
                     </div>
-                    @if($ticket->labels->count())
-                        <hr>
-                        <div>
-                            <strong>Label:</strong>
-                            @foreach($ticket->labels as $label)
-                                <span class="badge badge-info">{{ $label->label_name }}</span>
-                            @endforeach
+
+                    <div class="card-body p-3">
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            <span class="badge text-bg-primary">{{ $ticket->ticket_number }}</span>
+                            <span class="badge text-bg-{{ $statusColorMap[$ticket->status] ?? 'secondary' }}">
+                                {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
+                            </span>
+                            <span class="badge text-bg-{{ $ticket->priority ? 'warning' : 'secondary' }}">
+                                {{ $ticket->priority->priority_name ?? '-' }}
+                            </span>
                         </div>
-                    @endif
+
+                        <h2 class="h4 fw-bold mb-3">{{ $ticket->title }}</h2>
+                        <p class="text-muted mb-4">{{ $ticket->description }}</p>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="border rounded-4 p-3 h-100">
+                                    <div class="text-muted small mb-1">Kategori</div>
+                                    <div class="fw-semibold">{{ $ticket->category->category_name ?? '-' }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border rounded-4 p-3 h-100">
+                                    <div class="text-muted small mb-1">Prioritas</div>
+                                    <div class="fw-semibold">{{ $ticket->priority->priority_name ?? '-' }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border rounded-4 p-3 h-100">
+                                    <div class="text-muted small mb-1">Dibuat oleh</div>
+                                    <div class="fw-semibold">{{ $ticket->creator->name ?? '-' }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border rounded-4 p-3 h-100">
+                                    <div class="text-muted small mb-1">Ditugaskan ke</div>
+                                    <div class="fw-semibold">{{ $ticket->assignedAgent->name ?? 'Belum ditugaskan' }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border rounded-4 p-3 h-100">
+                                    <div class="text-muted small mb-1">Tenggat</div>
+                                    <div class="fw-semibold">
+                                        @if ($ticket->due_date)
+                                            {{ $ticket->due_date->format('d M Y, H:i') }}
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border rounded-4 p-3 h-100">
+                                    <div class="text-muted small mb-1">Label</div>
+                                    <div class="fw-semibold">
+                                        @forelse ($ticket->labels as $label)
+                                            <span class="badge text-bg-light text-dark me-1 mb-1">{{ $label->label_name }}</span>
+                                        @empty
+                                            <span class="text-muted">Tidak ada label</span>
+                                        @endforelse
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {{-- Komentar & Internal Note --}}
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Komentar & Internal Note</h3>
-                </div>
-                <div class="card-body">
-                    @forelse($ticket->comments as $comment)
-                        <div class="card {{ $comment->type === 'internal_note' ? 'card-warning' : 'card-light' }} mb-2">
-                            <div class="card-header py-1">
-                                <strong>{{ $comment->user->name ?? 'User Dihapus' }}</strong>
-                                <span class="badge {{ $comment->type === 'internal_note' ? 'badge-warning' : 'badge-secondary' }} ml-2">
-                                    {{ $comment->type === 'internal_note' ? 'Internal Note' : 'Komentar Publik' }}
-                                </span>
-                                <span class="float-right text-muted small">{{ $comment->created_at->format('d/m/Y H:i') }}</span>
-                            </div>
-                            <div class="card-body py-2">
-                                {{ $comment->body }}
-                            </div>
-                        </div>
-                    @empty
-                        <p class="text-muted">Belum ada komentar.</p>
-                    @endforelse
-                </div>
-                <div class="card-footer">
-                    <form action="{{ route('admin.tickets.comments', $ticket) }}" method="POST">
-                        @csrf
-                        <input type="hidden" name="_add_comment" value="1">
-                        <div class="form-group">
-                            <textarea name="body" class="form-control" rows="3" placeholder="Tulis komentar..." required></textarea>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="type" id="is_internal" value="internal_note">
-                                <label class="form-check-label" for="is_internal">Internal Note (hanya dilihat tim)</label>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Kirim</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm rounded-4 mb-3">
+                    <div class="card-header bg-transparent border-0 px-3 pt-3 pb-2">
+                        <h3 class="card-title fw-semibold mb-0">
+                            <i class="bi bi-person-workspace me-2"></i> Assign Agent
+                        </h3>
+                    </div>
+                    <div class="card-body p-3">
+                        <form action="{{ route('admin.tickets.assign', $ticket) }}" method="POST">
+                            @csrf
+                            @method('PATCH')
 
-        {{-- Kolom Kanan: Panel Aksi --}}
-        <div class="col-md-4">
-            {{-- Status --}}
-            <div class="card card-secondary">
-                <div class="card-header"><h3 class="card-title">Ubah Status</h3></div>
-                <div class="card-body">
-                    @php
-                        $statusColors = [
-                            'open' => 'secondary', 'assigned' => 'info',
-                            'in_progress' => 'primary', 'waiting_for_customer' => 'warning',
-                            'resolved' => 'success', 'closed' => 'dark',
-                            'reopened' => 'danger', 'escalated' => 'danger',
-                        ];
-                    @endphp
-                    <p>Status saat ini: <span class="badge badge-{{ $statusColors[$ticket->status] ?? 'secondary' }}">{{ ucfirst(str_replace('_', ' ', $ticket->status)) }}</span></p>
-                    @if(count($allowedStatuses) > 0)
-                        <form action="{{ route('admin.tickets.status', $ticket) }}" method="POST">
-                            @csrf @method('PATCH')
-                            <div class="form-group">
-                                <select name="status" class="form-control" required>
-                                    <option value="">Pilih Status Baru...</option>
-                                    @foreach($allowedStatuses as $status)
-                                        <option value="{{ $status }}">{{ ucfirst(str_replace('_', ' ', $status)) }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <button type="submit" class="btn btn-primary btn-block">Ubah Status</button>
-                        </form>
-                    @else
-                        <p class="text-muted">Tidak ada transisi status yang tersedia.</p>
-                    @endif
-                </div>
-            </div>
-
-            {{-- Assign Agent --}}
-            <div class="card card-secondary">
-                <div class="card-header"><h3 class="card-title">Assign Agent</h3></div>
-                <div class="card-body">
-                    <form action="{{ route('admin.tickets.assign', $ticket) }}" method="POST">
-                        @csrf @method('PATCH')
-                        <div class="form-group">
-                            <select name="assigned_to" class="form-control">
-                                <option value="">-- Tidak Ada --</option>
-                                @foreach($agents as $agent)
-                                    <option value="{{ $agent->id }}" {{ $ticket->assigned_to == $agent->id ? 'selected' : '' }}>
+                            <label for="assigned_to" class="form-label fw-semibold">Pilih agent</label>
+                            <select name="assigned_to" id="assigned_to" class="form-select">
+                                <option value="">Belum ditugaskan</option>
+                                @foreach ($agents as $agent)
+                                    <option value="{{ $agent->id }}" {{ old('assigned_to', $ticket->assigned_to) == $agent->id ? 'selected' : '' }}>
                                         {{ $agent->name }}
                                     </option>
                                 @endforeach
                             </select>
-                        </div>
-                        <button type="submit" class="btn btn-info btn-block">Simpan Assignment</button>
-                    </form>
-                </div>
-            </div>
 
-            {{-- Label --}}
-            <div class="card card-secondary">
-                <div class="card-header"><h3 class="card-title">Kelola Label</h3></div>
-                <div class="card-body">
-                    <form action="{{ route('admin.tickets.labels', $ticket) }}" method="POST">
-                        @csrf @method('PUT')
-                        <div class="form-group">
-                            @foreach($allLabels as $label)
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="labels[]" id="label_{{ $label->id }}" value="{{ $label->id }}"
-                                        {{ $ticket->labels->contains($label->id) ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="label_{{ $label->id }}">{{ $label->label_name }}</label>
-                                </div>
-                            @endforeach
-                        </div>
-                        <button type="submit" class="btn btn-warning btn-block">Simpan Label</button>
-                    </form>
-                </div>
-            </div>
+                            <div class="d-grid mt-3">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-person-check-fill me-1"></i> Simpan Assign
+                                </button>
+                            </div>
+                        </form>
 
-            {{-- Edit & Hapus --}}
-            <div class="card">
-                <div class="card-body">
-                    <a href="{{ route('admin.tickets.edit', $ticket) }}" class="btn btn-warning btn-block"><i class="fas fa-edit"></i> Edit Tiket</a>
-                    <form action="{{ route('admin.tickets.destroy', $ticket) }}" method="POST" class="mt-2" onsubmit="return confirm('Yakin ingin menghapus tiket ini? Tindakan ini tidak bisa dibatalkan.');">
-                        @csrf @method('DELETE')
-                        <button type="submit" class="btn btn-danger btn-block"><i class="fas fa-trash"></i> Hapus Tiket</button>
-                    </form>
+                        @if ($ticket->assignedAgent)
+                            <form action="{{ route('admin.tickets.assign', $ticket) }}" method="POST" class="mt-2">
+                                @csrf
+                                @method('PATCH')
+                                <input type="hidden" name="assigned_to" value="">
+                                <button type="submit" class="btn btn-outline-secondary btn-sm w-100">
+                                    <i class="bi bi-person-x-fill me-1"></i> Batalkan Assign
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-header bg-transparent border-0 px-3 pt-3 pb-2">
+                        <h3 class="card-title fw-semibold mb-0">
+                            <i class="bi bi-arrow-left-right me-2"></i> Ubah Status
+                        </h3>
+                    </div>
+                    <div class="card-body p-3">
+                        <form action="{{ route('admin.tickets.status', $ticket) }}" method="POST">
+                            @csrf
+                            @method('PATCH')
+
+                            <label for="status" class="form-label fw-semibold">Status tiket</label>
+                            <select name="status" id="status" class="form-select">
+                                @foreach ($allowedStatuses as $status)
+                                    <option value="{{ $status }}" {{ $ticket->status === $status ? 'selected' : '' }}>
+                                        {{ ucfirst(str_replace('_', ' ', $status)) }}
+                                    </option>
+                                @endforeach
+                            </select>
+
+                            <div class="d-grid mt-3">
+                                <button type="submit" class="btn btn-outline-primary">
+                                    <i class="bi bi-arrow-repeat me-1"></i> Perbarui Status
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
+
     </div>
-@stop
+</div>
+
+@endsection

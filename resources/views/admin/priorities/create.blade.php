@@ -9,7 +9,7 @@
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-end">
-                    <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{{ auth()->user()->dashboardRoute() }}">Home</a></li>
                     <li class="breadcrumb-item"><a href="{{ route('admin.priorities.index') }}">Prioritas</a></li>
                     <li class="breadcrumb-item active">Tambah</li>
                 </ol>
