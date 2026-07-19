@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin;
+use App\Http\Controllers\Customer;
+use App\Http\Controllers\AttachmentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -37,11 +39,16 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 });
 
 Route::middleware(['auth', 'role:customer'])->prefix('customer')->name('customer.')->group(function () {
-    Route::get('/dashboard', [Admin\DashboardController::class, 'index'])->name('dashboard');
-    Route::resources([
-        'tickets' => Admin\TicketController::class,
-    ]);
-    Route::post('/tickets/{ticket}/comments', [Admin\TicketController::class, 'storeComment'])->name('tickets.comments');
+    Route::get('/dashboard', [Customer\DashboardController::class, 'index'])->name('dashboard');
+    Route::resource('tickets', Customer\TicketController::class)->only(['index', 'create', 'store', 'show']);
+
+    Route::post('/tickets/{ticket}/attachments', [Customer\AttachmentController::class, 'store'])->name('attachments.store');
+    Route::get('/tickets/{ticket}/attachments/{attachment}/download', [Customer\AttachmentController::class, 'download'])->name('attachments.download');
+    Route::post('/tickets/{ticket}/comments', [Customer\CommentController::class, 'store'])->name('comments.store');
+});
+
+Route::middleware(['auth', 'role:supervisor'])->prefix('supervisor')->name('supervisor.')->group(function () {
+    Route::get('/dashboard', [Supervisor\DashboardController::class, 'index'])->name('dashboard');
 });
 
 require __DIR__.'/auth.php';

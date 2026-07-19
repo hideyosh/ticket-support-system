@@ -8,8 +8,6 @@ use App\Exceptions\InvalidStatusTransitionException;
 class TicketStatusService
 {
     /**
-     * Peta transisi status yang diizinkan.
-     * Key: status saat ini → Value: array status tujuan yang valid.
      *
      * @var array<string, array<string>>
      */

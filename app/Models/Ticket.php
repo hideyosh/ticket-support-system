@@ -7,9 +7,21 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
-#[Fillable('ticket_number', 'title', 'description', 'category_id',
-'priority_id', 'status', 'created_by', 'assigned_to', 'due_date', 'resolved_at', 'closed_at')]
+#[Fillable(
+    'ticket_number',
+    'title',
+    'description',
+    'category_id',
+    'priority_id',
+    'status',
+    'created_by',
+    'assigned_to',
+    'due_date',
+    'resolved_at',
+    'closed_at'
+)]
 class Ticket extends Model
 {
     protected function casts(): array
@@ -49,5 +61,29 @@ class Ticket extends Model
     public function labels(): BelongsToMany
     {
         return $this->belongsToMany(Label::class, 'ticket_label', 'ticket_id', 'label_id');
+    }
+
+    public function activityLogs(): HasMany
+    {
+        return $this->hasMany(ActivityLog::class);
+    }
+
+    public function attachments(): MorphMany
+    {
+        return $this->morphMany(Attachment::class, 'attachable');
+    }
+
+    public function getStatusBadgeClass(): string
+    {
+        return match ($this->status) {
+            'open' => 'bg-info',
+            'assigned' => 'bg-primary',
+            'in_progress' => 'bg-warning',
+            'waiting_for_customer' => 'bg-light text-dark',
+            'resolved' => 'bg-success',
+            'closed' => 'bg-secondary',
+            'reopened' => 'bg-danger',
+            'escalated' => 'bg-danger',
+        };
     }
 }

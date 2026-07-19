@@ -84,7 +84,6 @@ class TicketController extends Controller
         $count = Ticket::whereYear('created_at', $year)->count() + 1;
         $validated['ticket_number'] = 'TCK-' . $year . '-' . str_pad($count, 6, '0', STR_PAD_LEFT);
         $validated['created_by'] = auth()->id();
-        // status tetap tidak usah diisi manual, biar default migration yang isi 'open'
 
         $slaRule = SlaRule::where('priority_id', $validated['priority_id'])->first();
 
@@ -198,23 +197,15 @@ class TicketController extends Controller
      * Side-effect: jika tiket berstatus 'open' dan agent di-assign, status otomatis → 'assigned'.
      *              jika agent di-unassign dan status 'assigned', status otomatis → 'open'.
      */
-    public function assign(
-        Request $request,
-        Ticket $ticket,
-        TicketStatusService $ticketStatusService
-    ): RedirectResponse {
+    public function assign(Request $request, Ticket $ticket, TicketStatusService $ticketStatusService): RedirectResponse
+    {
         $request->validate([
-            'assigned_to' => [
-                'nullable',
-                'exists:users,id',
-                function ($attribute, $value, $fail) {
+            'assigned_to' => ['nullable', 'exists:users,id', function ($value) {
                     if (
                         $value && !User::where('id', $value)
                             ->whereHas('role', fn($q) => $q->where('role_name', 'agent'))
                             ->exists()
-                    ) {
-                        $fail('User yang dipilih bukan agent.');
-                    }
+                    );
                 },
             ],
         ]);
@@ -226,11 +217,7 @@ class TicketController extends Controller
 
         // Auto-transition: open → assigned saat agent di-assign
         if ($newAgentId && $previousStatus === 'open') {
-            try {
-                $ticketStatusService->transition($ticket, 'assigned');
-            } catch (InvalidStatusTransitionException) {
-                // Tidak hentikan proses; assign tetap berhasil
-            }
+            $ticketStatusService->transition($ticket, 'assigned');
         }
 
         // Auto-revert: assigned → open saat agent di-unassign
@@ -252,11 +239,8 @@ class TicketController extends Controller
     /**
      * Ubah status tiket dengan validasi transisi ketat via TicketStatusService.
      */
-    public function status(
-        Request $request,
-        Ticket $ticket,
-        TicketStatusService $ticketStatusService
-    ): RedirectResponse {
+    public function status(Request $request, Ticket $ticket, TicketStatusService $ticketStatusService ): RedirectResponse
+    {
         $request->validate([
             'status' => ['required', 'string'],
         ]);
