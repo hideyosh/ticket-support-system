@@ -3,14 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\RoleRequest;
 use App\Models\Role;
+use Illuminate\Http\Request;
 
 class RoleController extends Controller
 {
     public function index()
     {
-        $roles = Role::latest()->paginate(15);
+        $roles = Role::with('users')->latest()->paginate(15);
         return view('admin.roles.index', compact('roles'));
     }
 
@@ -19,15 +19,25 @@ class RoleController extends Controller
         return view('admin.roles.create');
     }
 
-    public function store(RoleRequest $request)
+    public function store(Request $request)
     {
-        Role::create($request->validated());
+        $validated = $request->validate([
+            'role_name' => [
+                'required',
+                'string',
+                'max:255',
+                'unique:roles,role_name',
+            ],
+        ]);
+
+        Role::create($validated);
         return redirect()->route('admin.roles.index')->with('success', 'Role berhasil dibuat.');
     }
 
     public function show(Role $role)
     {
-        return view('admin.roles.show', compact('role'));
+        $users = $role->users()->take(5)->get();
+        return view('admin.roles.show', compact('role', 'users'));
     }
 
     public function edit(Role $role)
@@ -35,9 +45,18 @@ class RoleController extends Controller
         return view('admin.roles.edit', compact('role'));
     }
 
-    public function update(RoleRequest $request, Role $role)
+    public function update(Request $request, Role $role)
     {
-        $role->update($request->validated());
+        $validated = $request->validate([
+            'role_name' => [
+                'required',
+                'string',
+                'max:255',
+                'unique:roles,role_name,' . $role->id,
+            ],
+        ]);
+
+        $role->update($validated);
         return redirect()->route('admin.roles.index')->with('success', 'Role berhasil diperbarui.');
     }
 

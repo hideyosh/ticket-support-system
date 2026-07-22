@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\CategoryRequest;
 use App\Models\Category;
+use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
@@ -20,9 +20,18 @@ class CategoryController extends Controller
         return view('admin.categories.create');
     }
 
-    public function store(CategoryRequest $request)
+    public function store(Request $request)
     {
-        Category::create($request->validated());
+        $validated = $request->validate([
+            'category_name' => [
+                'required',
+                'string',
+                'max:255',
+                'unique:categories,category_name',
+            ],
+        ]);
+
+        Category::create($validated);
 
         return redirect()
             ->route('admin.categories.index')
@@ -31,7 +40,8 @@ class CategoryController extends Controller
 
     public function show(Category $category)
     {
-        return view('admin.categories.show', compact('category'));
+        $tickets = $category->tickets()->with(['creator', 'assignedAgent', 'priority'])->latest()->take(5)->get();
+        return view('admin.categories.show', compact('category', 'tickets'));
     }
 
     public function edit(Category $category)
@@ -39,9 +49,18 @@ class CategoryController extends Controller
         return view('admin.categories.edit', compact('category'));
     }
 
-    public function update(CategoryRequest $request, Category $category)
+    public function update(Request $request, Category $category)
     {
-        $category->update($request->validated());
+        $validated = $request->validate([
+            'category_name' => [
+                'required',
+                'string',
+                'max:255',
+                'unique:categories,category_name,' . $category->id,
+            ],
+        ]);
+
+        $category->update($validated);
 
         return redirect()
             ->route('admin.categories.index')

@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\SlaRuleRequest;
 use App\Models\SlaRule;
 use App\Models\Priority;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class SlaRuleController extends Controller
 {
@@ -21,9 +22,19 @@ class SlaRuleController extends Controller
         return view('admin.sla_rules.create', compact('priorities'));
     }
 
-    public function store(SlaRuleRequest $request)
+    public function store(Request $request)
     {
-        SlaRule::create($request->validated());
+        $validated = $request->validate([
+            'priority_id' => [
+                'required',
+                Rule::exists('priorities', 'id'),
+                Rule::unique('sla_rules', 'priority_id'),
+            ],
+            'response_time' => ['required', 'integer', 'min:1'],
+            'resolution_time' => ['required', 'integer', 'min:1', 'gt:response_time'],
+        ]);
+
+        SlaRule::create($validated);
         return redirect()->route('admin.sla-rules.index')->with('success', 'SLA Rule berhasil dibuat.');
     }
 
@@ -39,9 +50,19 @@ class SlaRuleController extends Controller
         return view('admin.sla_rules.edit', compact('slaRule', 'priorities'));
     }
 
-    public function update(SlaRuleRequest $request, SlaRule $slaRule)
+    public function update(Request $request, SlaRule $slaRule)
     {
-        $slaRule->update($request->validated());
+        $validated = $request->validate([
+            'priority_id' => [
+                'required',
+                Rule::exists('priorities', 'id'),
+                Rule::unique('sla_rules', 'priority_id')->ignore($slaRule->id),
+            ],
+            'response_time' => ['required', 'integer', 'min:1'],
+            'resolution_time' => ['required', 'integer', 'min:1', 'gt:response_time'],
+        ]);
+
+        $slaRule->update($validated);
         return redirect()->route('admin.sla-rules.index')->with('success', 'SLA Rule berhasil diperbarui.');
     }
 

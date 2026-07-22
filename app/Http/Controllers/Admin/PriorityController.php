@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\PriorityRequest;
 use App\Models\Priority;
+use Illuminate\Http\Request;
 
 class PriorityController extends Controller
 {
@@ -19,15 +19,25 @@ class PriorityController extends Controller
         return view('admin.priorities.create');
     }
 
-    public function store(PriorityRequest $request)
+    public function store(Request $request)
     {
-        Priority::create($request->validated());
+        $validated = $request->validate([
+            'priority_name' => [
+                'required',
+                'string',
+                'max:255',
+                'unique:priorities,priority_name',
+            ],
+        ]);
+
+        Priority::create($validated);
         return redirect()->route('admin.priorities.index')->with('success', 'Prioritas berhasil dibuat.');
     }
 
     public function show(Priority $priority)
     {
-        return view('admin.priorities.show', compact('priority'));
+        $tickets = $priority->tickets()->with(['creator', 'assignedAgent', 'category'])->latest()->take(5)->get();
+        return view('admin.priorities.show', compact('priority', 'tickets'));
     }
 
     public function edit(Priority $priority)
@@ -35,9 +45,18 @@ class PriorityController extends Controller
         return view('admin.priorities.edit', compact('priority'));
     }
 
-    public function update(PriorityRequest $request, Priority $priority)
+    public function update(Request $request, Priority $priority)
     {
-        $priority->update($request->validated());
+        $validated = $request->validate([
+            'priority_name' => [
+                'required',
+                'string',
+                'max:255',
+                'unique:priorities,priority_name,' . $priority->id,
+            ],
+        ]);
+
+        $priority->update($validated);
         return redirect()->route('admin.priorities.index')->with('success', 'Prioritas berhasil diperbarui.');
     }
 

@@ -3,7 +3,8 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin;
 use App\Http\Controllers\Customer;
-use App\Http\Controllers\AttachmentController;
+use App\Http\Controllers\Supervisor;
+use App\Http\Controllers\Agent;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -41,7 +42,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 Route::middleware(['auth', 'role:customer'])->prefix('customer')->name('customer.')->group(function () {
     Route::get('/dashboard', [Customer\DashboardController::class, 'index'])->name('dashboard');
     Route::resource('tickets', Customer\TicketController::class)->only(['index', 'create', 'store', 'show']);
-
     Route::post('/tickets/{ticket}/attachments', [Customer\AttachmentController::class, 'store'])->name('attachments.store');
     Route::get('/tickets/{ticket}/attachments/{attachment}/download', [Customer\AttachmentController::class, 'download'])->name('attachments.download');
     Route::post('/tickets/{ticket}/comments', [Customer\CommentController::class, 'store'])->name('comments.store');
@@ -49,6 +49,19 @@ Route::middleware(['auth', 'role:customer'])->prefix('customer')->name('customer
 
 Route::middleware(['auth', 'role:supervisor'])->prefix('supervisor')->name('supervisor.')->group(function () {
     Route::get('/dashboard', [Supervisor\DashboardController::class, 'index'])->name('dashboard');
+    Route::resource('teams', Supervisor\TeamController::class);
+    Route::resource('tickets', Supervisor\TicketController::class);
+    Route::patch('/tickets/{ticket}/assign', [Supervisor\TicketController::class, 'assign'])->name('tickets.assign');
+    Route::patch('/tickets/{ticket}/status', [Supervisor\TicketController::class, 'status'])->name('tickets.status');
+    Route::put('/tickets/{ticket}/labels', [Supervisor\TicketController::class, 'labels'])->name('tickets.labels');
+    Route::post('/tickets/{ticket}/comments', [Supervisor\TicketController::class, 'storeComment'])->name('tickets.comments');
+    Route::post('/teams/{team}/members', [Supervisor\TeamController::class, 'addMember'])
+        ->name('teams.members.store');
+});
+
+Route::middleware(['auth', 'role:agent'])->prefix('agent')->name('agent.')->group(function() {
+    Route::get('/dashboard', [Agent\DashboardController::class, 'index'])->name('dashboard');
+    Route::resource('tickets', Agent\TicketController::class)->only(['index', 'show']);
 });
 
 require __DIR__.'/auth.php';

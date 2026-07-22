@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\LabelRequest;
 use App\Models\Label;
+use Illuminate\Http\Request;
 
 class LabelController extends Controller
 {
@@ -19,15 +19,25 @@ class LabelController extends Controller
         return view('admin.labels.create');
     }
 
-    public function store(LabelRequest $request)
+    public function store(Request $request)
     {
-        Label::create($request->validated());
+        $validated = $request->validate([
+            'label_name' => [
+                'required',
+                'string',
+                'max:255',
+                'unique:labels,label_name',
+            ],
+        ]);
+
+        Label::create($validated);
         return redirect()->route('admin.labels.index')->with('success', 'Label berhasil dibuat.');
     }
 
     public function show(Label $label)
     {
-        return view('admin.labels.show', compact('label'));
+        $tickets = $label->tickets()->with(['creator', 'assignedAgent', 'category', 'priority'])->latest()->take(5)->get();
+        return view('admin.labels.show', compact('label', 'tickets'));
     }
 
     public function edit(Label $label)
@@ -35,9 +45,18 @@ class LabelController extends Controller
         return view('admin.labels.edit', compact('label'));
     }
 
-    public function update(LabelRequest $request, Label $label)
+    public function update(Request $request, Label $label)
     {
-        $label->update($request->validated());
+        $validated = $request->validate([
+            'label_name' => [
+                'required',
+                'string',
+                'max:255',
+                'unique:labels,label_name,' . $label->id,
+            ],
+        ]);
+
+        $label->update($validated);
         return redirect()->route('admin.labels.index')->with('success', 'Label berhasil diperbarui.');
     }
 

@@ -54,11 +54,11 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($category->ticket()->latest()->take(5)->get() as $t)
+                        @forelse($tickets as $ticket)
                             <tr>
                                 <td class="text-center">{{ $loop->iteration }}</td>
-                                <td>{{ $t->title }}</td>
-                                <td>{{ $t->status }}</td>
+                                <td>{{ $ticket->title }}</td>
+                                <td>{{ $ticket->status }}</td>
                             </tr>
                         @empty
                             <tr>

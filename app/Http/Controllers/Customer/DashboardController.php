@@ -23,6 +23,7 @@ class DashboardController extends Controller
                 ->count(),
 
             'recentTickets' => Ticket::where('created_by', $user->id)
+                ->with(['category', 'priority', 'assignedAgent'])
                 ->orderByDesc('updated_at')
                 ->take(5)
                 ->get(),

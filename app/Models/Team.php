@@ -20,4 +20,16 @@ class Team extends Model
     {
         return $this->HasMany(User::class, 'team_id');
     }
+
+    public function tickets()
+    {
+        return $this->hasManyThrough(
+            Ticket::class,
+            User::class,
+            'team_id',
+            'assigned_to',
+            'id',
+            'id'
+        );
+    }
 }

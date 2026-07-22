@@ -42,8 +42,9 @@
                     <table class="table table-hover align-middle mb-0">
                         <thead>
                             <tr>
-                                <th style="width: 50px;" class="text-center">No</th>
+                                <th style="width: 50px" class="text-center">No</th>
                                 <th>Nama Role</th>
+                                <th class="text-center">Jumlah User</th>
                                 <th style="width: 180px;" class="text-center">Aksi</th>
                             </tr>
                         </thead>
@@ -52,6 +53,7 @@
                                 <tr>
                                     <td class="text-center">{{ $loop->iteration }}</td>
                                     <td>{{ ucfirst($role->role_name) }}</td>
+                                    <td class="text-center">{{ ucfirst($role->users->count()) }}</td>
                                     <td class="text-center">
                                         <a href="{{ route('admin.roles.show', $role->id) }}"
                                             class="btn btn-info btn-sm" title="Lihat">

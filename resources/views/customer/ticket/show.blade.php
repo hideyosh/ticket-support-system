@@ -110,8 +110,8 @@
                             {{-- <form action="{{ route('customer.tickets.reopen', $ticket) }}" method="POST"> --}}
                             <form action="#" method="POST">
                                 @csrf
-                                <button type="submit" class="btn btn-outline-primary w-100 rounded-pill"
-                                    {{ $canReopen ? '' : 'disabled' }}>
+                                <button type="submit" class="btn {{ $canReopen ? 'btn-primary' : 'btn-secondary' }} w-100 rounded-pill"
+                                    {{ $canReopen ? '' : 'disabled'}}>
                                     <i class="bi bi-arrow-counterclockwise me-1"></i>Reopen Tiket
                                 </button>
                             </form>
@@ -217,7 +217,7 @@
                             </h6>
                         </div>
                         <div class="card-body">
-                            @forelse ($ticket->activityLogs()->latest()->get() as $activity)
+                            @forelse ($ticket->activityLogs as $activity)
                                 <div class="d-flex gap-3 mb-3">
                                     <div class="flex-shrink-0">
                                         <div class="avatar avatar-sm">

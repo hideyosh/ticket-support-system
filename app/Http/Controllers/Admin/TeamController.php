@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\TeamRequest;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class TeamController extends Controller
 {
@@ -14,6 +14,9 @@ class TeamController extends Controller
     {
         $teams = Team::with('supervisor')
             ->withCount('agents')
+            ->withCount(['tickets as completed_tickets_count' => function($query) {
+                $query->whereIn('status', ['closed', 'resolved']);
+            }])
             ->orderBy('team_name', 'asc')
             ->paginate(15);
 
@@ -29,9 +32,14 @@ class TeamController extends Controller
         return view('admin.teams.create', compact('users'));
     }
 
-    public function store(TeamRequest $request)
+    public function store(Request $request)
     {
-        Team::create($request->validated());
+        $validated = $request->validate([
+            'team_name'    => ['required', 'string', 'max:255'],
+            'supervisor_id'=> ['nullable', Rule::exists('users', 'id')],
+        ]);
+
+        Team::create($validated);
 
         return redirect()->route('admin.teams.index')
             ->with('success', 'Team berhasil dibuat.');
@@ -55,9 +63,14 @@ class TeamController extends Controller
         return view('admin.teams.edit', compact('team', 'users'));
     }
 
-    public function update(TeamRequest $request, Team $team)
+    public function update(Request $request, Team $team)
     {
-        $team->update($request->validated());
+        $validated = $request->validate([
+            'team_name'    => ['required', 'string', 'max:255'],
+            'supervisor_id'=> ['nullable', Rule::exists('users', 'id')],
+        ]);
+
+        $team->update($validated);
 
         return redirect()->route('admin.teams.index')
             ->with('success', 'Team berhasil diperbarui.');

@@ -83,7 +83,16 @@ class TicketController extends Controller
     {
         abort_if($ticket->created_by !== auth()->id(), 403);
 
-        $ticket->load(['creator', 'assignedAgent', 'category', 'priority', 'labels']);
+        $ticket->load([
+            'creator',
+            'assignedAgent',
+            'category',
+            'priority',
+            'labels',
+            'comments.user',
+            'attachments',
+            'activityLogs' => fn($q) => $q->latest(),
+        ]);
 
         return view('customer.ticket.show', compact('ticket'));
     }

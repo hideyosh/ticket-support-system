@@ -3,19 +3,20 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\UserRequest;
 use App\Models\User;
 use App\Models\Role;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Arr;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
-    public function index(\Illuminate\Http\Request $request)
+    public function index(Request $request)
     {
         $roleIds = array_filter(explode(',', (string) $request->input('role_id')));
 
-        $query = User::with('role')
+        $query = User::with(['role', 'team'])
             ->select('users.*')
             ->leftJoin('roles', 'users.role_id', '=', 'roles.id')
             ->where('users.id', '!=', auth()->id());
@@ -34,17 +35,32 @@ class UserController extends Controller
         return view('admin.users.index', compact('users', 'roles'));
     }
 
-
     public function create()
     {
         $roles = Role::all();
-        // $teams = Team::select('id', 'name')->get(); // If teams exist
         return view('admin.users.create', compact('roles'));
     }
 
-    public function store(UserRequest $request)
+    public function store(Request $request)
     {
-        $validated = $request->validated();
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email'),
+            ],
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+            ],
+            'role_id' => ['required', Rule::exists('roles', 'id')],
+            'team_id' => ['nullable', Rule::exists('teams', 'id')],
+        ]);
+
         $validated['password'] = Hash::make($validated['password']);
 
         User::create($validated);
@@ -54,7 +70,7 @@ class UserController extends Controller
 
     public function show(User $user)
     {
-        $user->load('role');
+        $user->load(['role', 'team']);
         return view('admin.users.show', compact('user'));
     }
 
@@ -64,9 +80,25 @@ class UserController extends Controller
         return view('admin.users.edit', compact('user', 'roles'));
     }
 
-    public function update(UserRequest $request, User $user)
+    public function update(Request $request, User $user)
     {
-        $validated = $request->validated();
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->ignore($user->id),
+            ],
+            'password' => [
+                'nullable',
+                'string',
+                'min:8',
+            ],
+            'role_id' => ['required', Rule::exists('roles', 'id')],
+            'team_id' => ['nullable', Rule::exists('teams', 'id')],
+        ]);
 
         if (empty($validated['password'])) {
             $validated = Arr::except($validated, ['password']);

@@ -54,7 +54,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($role->users()->take(5)->get() as $user)
+                        @forelse($users as $user)
                             <tr>
                                 <td class="text-center">{{ $loop->iteration }}</td>
                                 <td>{{ $user->name }}</td>
