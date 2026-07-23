@@ -8,7 +8,7 @@
                     <p class="text-muted small mb-0">Detail tim dan anggotanya</p>
                 </div>
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ auth()->user()->dashboardRoute() }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route(auth()->user()->dashboardRoute()) }}">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="{{ route('supervisor.teams.index') }}">Team</a></li>
                     <li class="breadcrumb-item active">{{ $team->team_name }}</li>
                 </ol>

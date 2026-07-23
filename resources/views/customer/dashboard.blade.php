@@ -88,27 +88,9 @@
                                             <td>{{ $index + 1 }}</td>
                                             <td class="text-truncate" style="max-width: 300px;">{{ $ticket->title }}</td>
                                             <td>
-                                                @if ($ticket->status === 'open')
-                                                    <span class="badge text-bg-info">Open</span>
-                                                @elseif ($ticket->status === 'assigned')
-                                                    <span class="badge text-bg-primary">Assigned</span>
-                                                @elseif ($ticket->status === 'in_progress')
-                                                    <span class="badge text-bg-warning">In Progress</span>
-                                                @elseif ($ticket->status === 'waiting_for_customer')
-                                                    <span class="badge text-bg-light text-dark border">Waiting
-                                                        for Customer</span>
-                                                @elseif ($ticket->status === 'resolved')
-                                                    <span class="badge text-bg-success">Resolved</span>
-                                                @elseif ($ticket->status === 'closed')
-                                                    <span class="badge text-bg-secondary">Closed</span>
-                                                @elseif ($ticket->status === 'reopened')
-                                                    <span class="badge text-bg-danger">Reopened</span>
-                                                @elseif ($ticket->status === 'escalated')
-                                                    <span class="badge text-bg-danger">Escalated</span>
-                                                @else
-                                                    <span
-                                                        class="badge text-bg-secondary">{{ ucfirst($ticket->status) }}</span>
-                                                @endif
+                                                <span class="badge {{ $ticket->getStatusBadgeClass() }}">
+                                                    {{ str($ticket->status)->replace('_', ' ')->title() }}
+                                                </span>
                                             </td>
                                             <td class="text-capitalize">{{ $ticket->priority->priority_name ?? '-' }}</td>
                                             <td class="text-muted small">{{ $ticket->updated_at->diffForHumans() }}</td>

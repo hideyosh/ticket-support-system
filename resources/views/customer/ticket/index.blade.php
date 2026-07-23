@@ -89,8 +89,8 @@
                         <tbody>
                             @forelse ($tickets as $ticket)
                                 <tr>
-                                    <td>
-                                        <a href="{{ route('customer.tickets.show', $ticket) }}" class="text-decoration-none">
+                                    <td class="text-nowrap">
+                                        <a href="{{ route('customer.tickets.show', $ticket) }}" class="fw-semibold text-decoration-none font-monospace">
                                             {{ $ticket->ticket_number }}
                                         </a>
                                     </td>
@@ -98,7 +98,7 @@
                                     <td>{{ $ticket->category->category_name ?? '-' }}</td>
                                     <td>{{ $ticket->priority->priority_name ?? '-' }}</td>
                                     <td>
-                                        <span class="badge text-bg-secondary">
+                                        <span class="badge {{ $ticket->getStatusBadgeClass() }}">
                                             {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
                                         </span>
                                     </td>

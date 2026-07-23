@@ -35,7 +35,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('/tickets/{ticket}/assign', [Admin\TicketController::class, 'assign'])->name('tickets.assign');
     Route::patch('/tickets/{ticket}/status', [Admin\TicketController::class, 'status'])->name('tickets.status');
     Route::put('/tickets/{ticket}/labels', [Admin\TicketController::class, 'labels'])->name('tickets.labels');
-    Route::post('/tickets/{ticket}/comments', [Admin\TicketController::class, 'storeComment'])->name('tickets.comments');
+    Route::post('/tickets/{ticket}/comments', [Admin\CommentController::class, 'store'])->name('comments.store');
+    Route::delete('/tickets/{ticket}/comments/{comment}', [Admin\CommentController::class, 'destroy'])->name('comments.destroy');
     Route::get('/activity-logs', [Admin\ActivityLogController::class, 'index'])->name('activity-logs.index');
 });
 
@@ -45,6 +46,7 @@ Route::middleware(['auth', 'role:customer'])->prefix('customer')->name('customer
     Route::post('/tickets/{ticket}/attachments', [Customer\AttachmentController::class, 'store'])->name('attachments.store');
     Route::get('/tickets/{ticket}/attachments/{attachment}/download', [Customer\AttachmentController::class, 'download'])->name('attachments.download');
     Route::post('/tickets/{ticket}/comments', [Customer\CommentController::class, 'store'])->name('comments.store');
+    Route::delete('/tickets/{ticket}/comments/{comment}', [Customer\CommentController::class, 'destroy'])->name('comments.destroy');
 });
 
 Route::middleware(['auth', 'role:supervisor'])->prefix('supervisor')->name('supervisor.')->group(function () {

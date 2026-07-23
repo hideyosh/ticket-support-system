@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Customer\TicketRequest;
+use App\Http\Requests\TicketRequest;
 use App\Models\Category;
 use App\Models\Label;
 use App\Models\Priority;
@@ -79,21 +79,21 @@ class TicketController extends Controller
             ->with('success', "Tiket {$ticket->ticket_number} berhasil dibuat.");
     }
 
-    public function show(Ticket $ticket): View
-    {
-        abort_if($ticket->created_by !== auth()->id(), 403);
+        public function show(Ticket $ticket): View
+        {
+            abort_if($ticket->created_by !== auth()->id(), 403);
 
-        $ticket->load([
-            'creator',
-            'assignedAgent',
-            'category',
-            'priority',
-            'labels',
-            'comments.user',
-            'attachments',
-            'activityLogs' => fn($q) => $q->latest(),
-        ]);
+            $ticket->load([
+                'creator',
+                'assignedAgent',
+                'category',
+                'priority',
+                'labels',
+                'comments.user',
+                'attachments',
+                'activityLogs' => fn($q) => $q->latest(),
+            ]);
 
-        return view('customer.ticket.show', compact('ticket'));
-    }
+            return view('customer.ticket.show', compact('ticket'));
+        }
 }

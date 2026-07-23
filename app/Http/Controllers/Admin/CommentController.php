@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Http\Controllers\Customer;
+namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Ticket;
 use App\Models\Comment;
-use Illuminate\Http\Request;
+use App\Models\Ticket;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\Request;
 
 class CommentController extends Controller
 {
@@ -16,13 +16,14 @@ class CommentController extends Controller
     {
         $validated = $request->validate([
             'body' => ['required', 'string', 'max:5000'],
+            'type' => ['required', 'in:public_comment,internal_note'],
             'attachment' => ['nullable', 'file', 'max:10240', 'mimes:jpg,jpeg,png,pdf,docx,xls,xlsx'],
         ]);
 
         $ticket->comments()->create([
             'user_id' => auth()->id(),
             'body'    => $validated['body'],
-            'type'    => 'public_comment',
+            'type'    => $validated['type'],
         ]);
 
         if ($request->hasFile('attachment')) {

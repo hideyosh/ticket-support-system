@@ -58,7 +58,7 @@ class TicketController extends Controller
         $categories = Category::select('id', 'category_name')->orderBy('category_name')->get();
         $priorities = Priority::select('id', 'priority_name')->get();
 
-        return view('admin.tickets.index', compact('tickets', 'categories', 'priorities'));
+        return view('admin.ticket.index', compact('tickets', 'categories', 'priorities'));
     }
 
     /**
@@ -70,7 +70,7 @@ class TicketController extends Controller
         $priorities = Priority::select('id', 'priority_name')->get();
         $labels     = Label::select('id', 'label_name')->orderBy('label_name')->get();
 
-        return view('admin.tickets.create', compact('categories', 'priorities', 'labels'));
+        return view('admin.ticket.create', compact('categories', 'priorities', 'labels'));
     }
 
     /**
@@ -127,7 +127,7 @@ class TicketController extends Controller
         $allowedStatuses = $ticketStatusService->allowedTransitions($ticket->status);
         $statusColorMap  = $ticketStatusService->statusColorMap();
 
-        return view('admin.tickets.show', compact(
+        return view('admin.ticket.show', compact(
             'ticket',
             'agents',
             'allLabels',
@@ -147,7 +147,7 @@ class TicketController extends Controller
         $priorities = Priority::select('id', 'priority_name')->get();
         $labels     = Label::select('id', 'label_name')->orderBy('label_name')->get();
 
-        return view('admin.tickets.edit', compact('ticket', 'categories', 'priorities', 'labels'));
+        return view('admin.ticket.edit', compact('ticket', 'categories', 'priorities', 'labels'));
     }
 
     /**
@@ -279,29 +279,5 @@ class TicketController extends Controller
         $ticket->labels()->sync($request->labels ?? []);
 
         return redirect()->back()->with('success', 'Label tiket berhasil diperbarui.');
-    }
-
-    // =========================================================================
-    // Comments & Internal Notes
-    // =========================================================================
-
-    /**
-     * Tambah komentar publik atau internal note ke tiket.
-     * Internal note hanya boleh dilihat oleh agent/supervisor/admin (ditangani di view).
-     */
-    public function storeComment(Request $request, Ticket $ticket): RedirectResponse
-    {
-        $request->validate([
-            'body' => ['required', 'string', 'max:5000'],
-            'type' => ['nullable', 'in:public_comment,internal_note'],
-        ]);
-
-        $ticket->comments()->create([
-            'user_id' => auth()->id(),
-            'body'    => $request->body,
-            'type'    => $request->type === 'internal_note' ? 'internal_note' : 'public_comment',
-        ]);
-
-        return redirect()->back()->with('success', 'Komentar berhasil ditambahkan.');
     }
 }

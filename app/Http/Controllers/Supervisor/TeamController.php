@@ -7,6 +7,7 @@ use App\Models\Role;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class TeamController extends Controller
 {
@@ -77,8 +78,6 @@ class TeamController extends Controller
 
     public function addMember(Request $request, Team $team)
     {
-        abort_if($team->supervisor_id !== $request->user()->id, 403);
-
         $validated = $request->validate([
             'agent_id' => 'required|exists:users,id',
         ]);
@@ -93,23 +92,36 @@ class TeamController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(Team $team)
     {
-        //
+        return view('supervisor.teams.edit', compact('team'));
     }
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Team $team)
     {
-        //
+        $validated = $request->validate([
+            'team_name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('teams', 'team_name')->ignore($team->id),
+            ],
+        ]);
+
+        $team->update($validated);
+
+        return redirect()->route('supervisor.teams.index')->with('success', "Team berhasil diperbarui.");
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Team $team)
     {
-        //
+        $team->delete();
+
+        return redirect()->route('supervisor.teams.index')->with('success', "Team berhasil dihapus.");
     }
 }

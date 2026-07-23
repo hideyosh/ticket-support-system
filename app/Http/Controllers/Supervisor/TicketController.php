@@ -51,7 +51,7 @@ class TicketController extends Controller
         $categories = Category::select('id', 'category_name')->orderBy('category_name')->get();
         $priorities = Priority::select('id', 'priority_name')->get();
 
-        return view('supervisor.tickets.index', compact('tickets', 'categories', 'priorities'));
+        return view('supervisor.ticket.index', compact('tickets', 'categories', 'priorities'));
     }
 
     public function create(): View
@@ -60,7 +60,7 @@ class TicketController extends Controller
         $priorities = Priority::select('id', 'priority_name')->get();
         $labels     = Label::select('id', 'label_name')->orderBy('label_name')->get();
 
-        return view('supervisor.tickets.create', compact('categories', 'priorities', 'labels'));
+        return view('supervisor.ticket.create', compact('categories', 'priorities', 'labels'));
     }
 
     public function store(TicketRequest $request, TicketSlaService $slaService): RedirectResponse
@@ -111,7 +111,7 @@ class TicketController extends Controller
         $allowedStatuses = $ticketStatusService->allowedTransitions($ticket->status);
         $statusColorMap  = $ticketStatusService->statusColorMap();
 
-        return view('supervisor.tickets.show', compact(
+        return view('supervisor.ticket.show', compact(
             'ticket',
             'agents',
             'allLabels',
@@ -131,7 +131,7 @@ class TicketController extends Controller
         $priorities = Priority::select('id', 'priority_name')->get();
         $labels     = Label::select('id', 'label_name')->orderBy('label_name')->get();
 
-        return view('supervisor.tickets.edit', compact('ticket', 'categories', 'priorities', 'labels'));
+        return view('supervisor.ticket.edit', compact('ticket', 'categories', 'priorities', 'labels'));
     }
 
     /**

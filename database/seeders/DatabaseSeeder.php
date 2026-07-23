@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             CategorySeeder::class,
             PrioritySeeder::class,
+            LabelSeeder::class,
             SlaRuleSeeder::class,
         ]);
     }

@@ -50,7 +50,7 @@ class TicketController extends Controller
         $categories = Category::select('id', 'category_name')->orderBy('category_name')->get();
         $priorities = Priority::select('id', 'priority_name')->get();
 
-        return view('agent.tickets.index', compact('tickets', 'categories', 'priorities'));
+        return view('agent.ticket.index', compact('tickets', 'categories', 'priorities'));
     }
 
     /**
@@ -58,8 +58,6 @@ class TicketController extends Controller
      */
     public function show(Ticket $ticket): View
     {
-        abort_if($ticket->assigned_to !== auth()->id(), 403);
-
         $ticket->load([
             'creator',
             'assignedAgent',
@@ -71,6 +69,6 @@ class TicketController extends Controller
             'activityLogs' => fn($q) => $q->latest(),
         ]);
 
-        return view('agent.tickets.show', compact('ticket'));
+        return view('agent.ticket.show', compact('ticket'));
     }
 }
