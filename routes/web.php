@@ -22,6 +22,7 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [Admin\DashboardController::class, 'index'])->name('dashboard');
+    //Data Master
     Route::resources([
         'users' => Admin\UserController::class,
         'roles' => Admin\RoleController::class,
@@ -34,7 +35,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     ]);
     Route::patch('/tickets/{ticket}/assign', [Admin\TicketController::class, 'assign'])->name('tickets.assign');
     Route::patch('/tickets/{ticket}/status', [Admin\TicketController::class, 'status'])->name('tickets.status');
-    Route::put('/tickets/{ticket}/labels', [Admin\TicketController::class, 'labels'])->name('tickets.labels');
     Route::post('/tickets/{ticket}/comments', [Admin\CommentController::class, 'store'])->name('comments.store');
     Route::delete('/tickets/{ticket}/comments/{comment}', [Admin\CommentController::class, 'destroy'])->name('comments.destroy');
     Route::get('/activity-logs', [Admin\ActivityLogController::class, 'index'])->name('activity-logs.index');
@@ -43,8 +43,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 Route::middleware(['auth', 'role:customer'])->prefix('customer')->name('customer.')->group(function () {
     Route::get('/dashboard', [Customer\DashboardController::class, 'index'])->name('dashboard');
     Route::resource('tickets', Customer\TicketController::class)->only(['index', 'create', 'store', 'show']);
-    Route::post('/tickets/{ticket}/attachments', [Customer\AttachmentController::class, 'store'])->name('attachments.store');
-    Route::get('/tickets/{ticket}/attachments/{attachment}/download', [Customer\AttachmentController::class, 'download'])->name('attachments.download');
     Route::post('/tickets/{ticket}/comments', [Customer\CommentController::class, 'store'])->name('comments.store');
     Route::delete('/tickets/{ticket}/comments/{comment}', [Customer\CommentController::class, 'destroy'])->name('comments.destroy');
 });
@@ -52,18 +50,20 @@ Route::middleware(['auth', 'role:customer'])->prefix('customer')->name('customer
 Route::middleware(['auth', 'role:supervisor'])->prefix('supervisor')->name('supervisor.')->group(function () {
     Route::get('/dashboard', [Supervisor\DashboardController::class, 'index'])->name('dashboard');
     Route::resource('teams', Supervisor\TeamController::class);
-    Route::resource('tickets', Supervisor\TicketController::class);
+    Route::resource('tickets', Supervisor\TicketController::class)->only('index', 'show');
     Route::patch('/tickets/{ticket}/assign', [Supervisor\TicketController::class, 'assign'])->name('tickets.assign');
     Route::patch('/tickets/{ticket}/status', [Supervisor\TicketController::class, 'status'])->name('tickets.status');
-    Route::put('/tickets/{ticket}/labels', [Supervisor\TicketController::class, 'labels'])->name('tickets.labels');
-    Route::post('/tickets/{ticket}/comments', [Supervisor\TicketController::class, 'storeComment'])->name('tickets.comments');
-    Route::post('/teams/{team}/members', [Supervisor\TeamController::class, 'addMember'])
-        ->name('teams.members.store');
+    Route::post('/tickets/{ticket}/comments', [Supervisor\CommentController::class, 'store'])->name('comments.store');
+    Route::delete('/tickets/{ticket}/comments/{comment}', [Supervisor\CommentController::class, 'destroy'])->name('comments.destroy');
+    Route::post('/teams/{team}/members', [Supervisor\TeamController::class, 'addMember'])->name('teams.members.store');
 });
 
-Route::middleware(['auth', 'role:agent'])->prefix('agent')->name('agent.')->group(function() {
+Route::middleware(['auth', 'role:agent'])->prefix('agent')->name('agent.')->group(function () {
     Route::get('/dashboard', [Agent\DashboardController::class, 'index'])->name('dashboard');
     Route::resource('tickets', Agent\TicketController::class)->only(['index', 'show']);
+    Route::patch('/tickets/{ticket}/status', [Agent\TicketController::class, 'status'])->name('tickets.status');
+    Route::post('/tickets/{ticket}/comments', [Agent\CommentController::class, 'store'])->name('comments.store');
+    Route::delete('/tickets/{ticket}/comments/{comment}', [Agent\CommentController::class, 'destroy'])->name('comments.destroy');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

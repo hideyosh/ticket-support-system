@@ -17,23 +17,35 @@ class CommentController extends Controller
         $validated = $request->validate([
             'body' => ['required', 'string', 'max:5000'],
             'type' => ['required', 'in:public_comment,internal_note'],
-            'attachment' => ['nullable', 'file', 'max:10240', 'mimes:jpg,jpeg,png,pdf,docx,xls,xlsx'],
+            'attachments' => ['nullable', 'array'],
+            'attachments.*' => ['file', 'max:10240', 'mimes:jpg,jpeg,png,pdf,doc,docx,xls,xlsx'],
         ]);
 
-        $ticket->comments()->create([
-            'user_id' => auth()->id(),
-            'body'    => $validated['body'],
-            'type'    => $validated['type'],
-        ]);
-
-        if ($request->hasFile('attachment')) {
-            $path = $request->file('attachment')->store('attachments', 'public');
-            $ticket->attachments()->create([
+        $comment = DB::transaction(function () use ($ticket, $validated, $request) {
+            $comment = $ticket->comments()->create([
                 'user_id' => auth()->id(),
-                'file_name' => $request->file('attachment')->getClientOriginalName(),
-                'file_path' => $path,
+                'body'    => $validated['body'],
+                'type'    => $validated['type'],
             ]);
-        }
+
+            if ($request->hasFile('attachments')) {
+                foreach ($request->file('attachments') as $file) {
+                    $storedPath = $file->store('attachments', 'public');
+
+                    $comment->attachments()->create([
+                        'uploaded_by'   => auth()->id(),
+                        'original_name' => $file->getClientOriginalName(),
+                        'stored_name'   => basename($storedPath),
+                        'path'          => $storedPath,
+                        'mime_type'     => $file->getClientMimeType(),
+                        'size'          => $file->getSize(),
+                    ]);
+                }
+            }
+
+            return $comment;
+        });
+
 
         return back()->with('success', 'Komentar berhasil ditambahkan.');
     }

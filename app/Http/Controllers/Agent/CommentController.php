@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Controllers\Supervisor;
+namespace App\Http\Controllers\Agent;
 
 use App\Http\Controllers\Controller;
-use App\Models\Ticket;
 use App\Models\Comment;
+use App\Models\Ticket;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +17,6 @@ class CommentController extends Controller
     {
         $validated = $request->validate([
             'body' => ['required', 'string', 'max:5000'],
-            'type' => ['required', 'in:public_comment,internal_note'],
             'attachments' => ['nullable', 'array'],
             'attachments.*' => ['file', 'max:10240', 'mimes:jpg,jpeg,png,pdf,doc,docx,xls,xlsx'],
         ]);
@@ -26,7 +25,7 @@ class CommentController extends Controller
             $comment = $ticket->comments()->create([
                 'user_id' => auth()->id(),
                 'body'    => $validated['body'],
-                'type'    => $validated['type'],
+                'type'    => 'public_comment',
             ]);
 
             if ($request->hasFile('attachments')) {
@@ -46,8 +45,7 @@ class CommentController extends Controller
 
             return $comment;
         });
-
-
+        
         return back()->with('success', 'Komentar berhasil ditambahkan.');
     }
 

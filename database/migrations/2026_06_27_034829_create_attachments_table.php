@@ -16,7 +16,7 @@
                 $table->string('attachable_type');
                 $table->unsignedBigInteger('attachable_id');
                 $table->foreignId('uploaded_by')->constrained('users', 'id')->onDelete('cascade');
-                $table->string('original_name');
+                $table->string('original_name');    
                 $table->string('stored_name');
                 $table->string('path');
                 $table->string('mime_type');

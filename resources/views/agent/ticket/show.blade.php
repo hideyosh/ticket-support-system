@@ -7,11 +7,11 @@
             <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
                 <div>
                     <h3 class="mb-1 fw-bold">Detail Tiket</h3>
-                    <p class="text-muted small mb-0">Pantau informasi tiket dan kelola penugasan agent.</p>
+                    <p class="text-muted small mb-0">Pantau informasi tiket dan tanggapi kendala pengguna.</p>
                 </div>
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="{{ route(auth()->user()->dashboardRoute()) }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('supervisor.tickets.index') }}">Tiket</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('agent.tickets.index') }}">Tiket</a></li>
                     <li class="breadcrumb-item active">{{ $ticket->ticket_number }}</li>
                 </ol>
             </div>
@@ -47,7 +47,7 @@
                                     <i class="bi bi-ticket-detailed-fill me-2"></i> Informasi Tiket
                                 </h3>
                                 <div class="d-flex flex-wrap gap-2">
-                                    <a href="{{ route('supervisor.tickets.index') }}" class="btn btn-outline-secondary btn-sm">
+                                    <a href="{{ route('agent.tickets.index') }}" class="btn btn-outline-secondary btn-sm">
                                         <i class="bi bi-arrow-left me-1"></i> Kembali
                                     </a>
                                 </div>
@@ -173,7 +173,7 @@
                         <div class="card-body p-3">
 
                             {{-- Form Tambah Komentar/Balasan --}}
-                            <form action="{{ route('supervisor.comments.store', $ticket) }}" method="POST"
+                            <form action="{{ route('agent.comments.store', $ticket) }}" method="POST"
                                 enctype="multipart/form-data" class="mb-4">
                                 @csrf
                                 <div class="mb-3">
@@ -266,7 +266,7 @@
                                                                         <button type="button" class="btn btn-light btn-sm"
                                                                             data-bs-dismiss="modal">Batal</button>
                                                                         <form
-                                                                            action="{{ route('supervisor.comments.destroy', [$ticket, $comment]) }}"
+                                                                            action="{{ route('agent.comments.destroy', [$ticket, $comment]) }}"
                                                                             method="POST" class="d-inline">
                                                                             @csrf
                                                                             @method('DELETE')
@@ -343,67 +343,31 @@
                                     @endforeach
                                 </ul>
                             @else
-                                <p class="text-muted small mb-0">Belum ada riwayat riwayat aktivitas yang tercatat.</p>
+                                <p class="text-muted small mb-0">Belum ada riwayat aktivitas yang tercatat.</p>
                             @endif
                         </div>
                     </div>
 
                 </div>
 
-                {{-- Kolom Kanan: Pengaturan Agent & Status --}}
+                {{-- Kolom Kanan: Pengaturan Agent (Read-only) & Ubah Status --}}
                 <div class="col-lg-4">
 
-                    {{-- Assign Agent --}}
+                    {{-- Penugasan Agent (Read-Only) --}}
                     <div class="card border-0 shadow-sm rounded-4 mb-3">
                         <div class="card-header bg-transparent border-0 px-3 pt-3 pb-2">
                             <h3 class="card-title fw-semibold mb-0">
-                                <i class="bi bi-person-workspace me-2"></i> Assign Agent
+                                <i class="bi bi-person-workspace me-2"></i> Agent Penanggung Jawab
                             </h3>
                         </div>
                         <div class="card-body p-3">
-                            <form action="{{ route('supervisor.tickets.assign', $ticket) }}" method="POST">
-                                @csrf
-                                @method('PATCH')
-
-                                <label for="assigned_to" class="form-label fw-semibold">Pilih agent</label>
-                                <select name="assigned_to" id="assigned_to" class="form-select">
-                                    <option value="">Belum ditugaskan</option>
-                                    @if ($ticket->assignedAgent && !$agents->contains('id', $ticket->assigned_to))
-                                        <option value="{{ $ticket->assigned_to }}" selected disabled>
-                                            {{ $ticket->assignedAgent->name }} (Luar tim Anda)
-                                        </option>
-                                    @endif
-                                    @foreach ($agents as $agent)
-                                        <option value="{{ $agent->id }}"
-                                            {{ old('assigned_to', $ticket->assigned_to) == $agent->id ? 'selected' : '' }}>
-                                            {{ $agent->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @if ($agents->isEmpty())
-                                    <small class="text-muted mt-1 d-block">
-                                        <i class="bi bi-info-circle me-1"></i> Belum ada agent dalam tim Anda.
-                                    </small>
-                                @endif
-
-                                <div class="d-grid mt-3">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="bi bi-person-check-fill me-1"></i> Simpan Assign
-                                    </button>
+                            <div class="d-flex align-items-center p-2 border rounded-3 bg-light">
+                                <i class="bi bi-person-circle fs-3 me-3 text-primary"></i>
+                                <div>
+                                    <div class="fw-bold text-dark">{{ $ticket->assignedAgent->name ?? 'Belum Ditugaskan' }}</div>
+                                    <div class="small text-muted">{{ $ticket->assignedAgent->email ?? '-' }}</div>
                                 </div>
-                            </form>
-
-                            @if ($ticket->assignedAgent)
-                                <form action="{{ route('supervisor.tickets.assign', $ticket) }}" method="POST"
-                                    class="mt-2">
-                                    @csrf
-                                    @method('PATCH')
-                                    <input type="hidden" name="assigned_to" value="">
-                                    <button type="submit" class="btn btn-outline-secondary btn-sm w-100">
-                                        <i class="bi bi-person-x-fill me-1"></i> Batalkan Assign
-                                    </button>
-                                </form>
-                            @endif
+                            </div>
                         </div>
                     </div>
 
@@ -415,7 +379,7 @@
                             </h3>
                         </div>
                         <div class="card-body p-3">
-                            <form action="{{ route('supervisor.tickets.status', $ticket) }}" method="POST">
+                            <form action="{{ route('agent.tickets.status', $ticket) }}" method="POST">
                                 @csrf
                                 @method('PATCH')
 

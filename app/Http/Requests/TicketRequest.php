@@ -27,22 +27,14 @@ class TicketRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Judul tiket - required, string, maksimal 255 karakter
             'title' => ['required', 'string', 'max:255'],
-
-            // Deskripsi tiket - required, string, tidak ada batas maksimal
             'description' => ['required', 'string'],
-
-            // Kategori tiket - required, harus ada di tabel categories
             'category_id' => ['required', Rule::exists('categories', 'id')],
-
-            // Prioritas tiket - required, harus ada di tabel priorities
             'priority_id' => ['required', Rule::exists('priorities', 'id')],
-
-            // Label tiket - optional (nullable), array, setiap item harus ada di tabel labels
-            // Note: ticket_number & created_by di-generate/diset otomatis di controller, tidak perlu di sini
             'labels' => ['nullable', 'array'],
             'labels.*' => ['exists:labels,id'],
+            'attachments' => ['nullable', 'array'],
+            'attachments.*' => ['file', 'max:2048', 'mimes:png,jpg,jpeg,pdf,doc,docx,xls,xlsx'],
         ];
     }
 
@@ -75,6 +67,11 @@ class TicketRequest extends FormRequest
             // Error messages untuk field 'labels'
             'labels.array' => 'Format label tidak valid.',
             'labels.*.exists' => 'Salah satu label yang dipilih tidak valid.',
+
+            'attachments.array' => 'Format lampiran tidak valid.',
+            'attachments.*.file' => 'Lampiran harus berupa berkas/file.',
+            'attachments.*.max' => 'Ukuran setiap lampiran maksimal 2 MB.',
+            'attachments.*.mimes' => 'Format lampiran hanya boleh berupa gambar (PNG, JPG), PDF, Word, atau Excel.'
         ];
     }
 }

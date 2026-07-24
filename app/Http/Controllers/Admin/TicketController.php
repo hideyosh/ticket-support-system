@@ -15,13 +15,11 @@ use App\Services\TicketStatusService;
 use App\Exceptions\InvalidStatusTransitionException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class TicketController extends Controller
 {
-    // =========================================================================
-    // CRUD Utama
-    // =========================================================================
 
     /**
      * Tampilkan semua tiket dengan filter opsional.
@@ -86,22 +84,34 @@ class TicketController extends Controller
         $validated['created_by'] = auth()->id();
 
         $slaRule = SlaRule::where('priority_id', $validated['priority_id'])->first();
+        $validated['due_date'] = $slaRule
+            ? $slaService->calculateDueDate(now(), $slaRule, 'open')
+            : null;
 
-        if ($slaRule) {
-            // karena ticket baru, status pasti 'open' (sesuai default migration)
-            $validated['due_date'] = $slaService->calculateDueDate(now(), $slaRule, 'open');
-        } else {
-            $validated['due_date'] = null;
-        }
+        $ticket = DB::transaction(function () use ($validated, $request) {
+            $ticket = Ticket::create($validated);
+            $ticket->labels()->sync($request->input('labels', []));
 
-        $ticket = Ticket::create($validated);
-        $ticket->labels()->sync($request->labels ?? []);
+            if ($request->hasFile('attachments')) {
+                foreach ($request->file('attachments') as $file) {
+                    $storedPath = $file->store('attachments', 'public');
 
-        return redirect()
-            ->route('admin.tickets.index')
-            ->with('success', "Tiket {$ticket->ticket_number} berhasil dibuat.");
+                    $ticket->attachments()->create([
+                        'uploaded_by'   => auth()->id(),
+                        'original_name' => $file->getClientOriginalName(),
+                        'stored_name'   => basename($storedPath),
+                        'path'          => $storedPath,
+                        'mime_type'     => $file->getClientMimeType(),
+                        'size'          => $file->getSize(),
+                    ]);
+                }
+            }
+
+            return $ticket;
+        });
+
+        return redirect()->route('admin.tickets.show', $ticket)->with('success', "Tiket berhasil dibuat.");
     }
-
     /**
      * Tampilkan detail tiket.
      */
@@ -150,10 +160,6 @@ class TicketController extends Controller
         return view('admin.ticket.edit', compact('ticket', 'categories', 'priorities', 'labels'));
     }
 
-    /**
-     * Update data tiket (title, description, category, priority, due_date, labels).
-     * ticket_number & created_by TIDAK boleh diubah dari sini.
-     */
     public function update(TicketRequest $request, Ticket $ticket, TicketSlaService $slaService): RedirectResponse
     {
         $validated = $request->validated();
@@ -171,8 +177,6 @@ class TicketController extends Controller
                 $validated['due_date'] = null;
             }
         }
-        // kalau status & priority TIDAK berubah, due_date TIDAK disentuh sama sekali
-        // (tidak dimasukkan ke $validated, jadi $ticket->update() tidak akan menimpanya)
 
         $ticket->update($validated);
 
@@ -196,16 +200,6 @@ class TicketController extends Controller
             ->with('success', "Tiket {$ticketNumber} berhasil dihapus.");
     }
 
-    // =========================================================================
-    // Assign / Reassign
-    // =========================================================================
-
-    /**
-     * Assign atau reassign agent ke tiket.
-     * Hanya admin/supervisor yang boleh melakukan ini (dilindungi middleware role:admin).
-     * Side-effect: jika tiket berstatus 'open' dan agent di-assign, status otomatis → 'assigned'.
-     *              jika agent di-unassign dan status 'assigned', status otomatis → 'open'.
-     */
     public function assign(Request $request, Ticket $ticket, TicketStatusService $ticketStatusService): RedirectResponse
     {
         $request->validate([
@@ -224,12 +218,10 @@ class TicketController extends Controller
 
         $ticket->update(['assigned_to' => $newAgentId]);
 
-        // Auto-transition: open → assigned saat agent di-assign
         if ($newAgentId && $previousStatus === 'open') {
             $ticketStatusService->transition($ticket, 'assigned');
         }
 
-        // Auto-revert: assigned → open saat agent di-unassign
         if (!$newAgentId && $previousStatus === 'assigned') {
             $ticket->update(['status' => 'open']);
         }
@@ -241,13 +233,6 @@ class TicketController extends Controller
         return redirect()->back()->with('success', $message);
     }
 
-    // =========================================================================
-    // Status Transition
-    // =========================================================================
-
-    /**
-     * Ubah status tiket dengan validasi transisi ketat via TicketStatusService.
-     */
     public function status(Request $request, Ticket $ticket, TicketStatusService $ticketStatusService ): RedirectResponse
     {
         $request->validate([
@@ -260,24 +245,5 @@ class TicketController extends Controller
         } catch (InvalidStatusTransitionException $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
-    }
-
-    // =========================================================================
-    // Labels
-    // =========================================================================
-
-    /**
-     * Sync label pada tiket.
-     */
-    public function labels(Request $request, Ticket $ticket): RedirectResponse
-    {
-        $request->validate([
-            'labels'   => ['nullable', 'array'],
-            'labels.*' => ['exists:labels,id'],
-        ]);
-
-        $ticket->labels()->sync($request->labels ?? []);
-
-        return redirect()->back()->with('success', 'Label tiket berhasil diperbarui.');
     }
 }

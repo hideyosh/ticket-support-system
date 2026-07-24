@@ -139,36 +139,45 @@
             </div>
 
             {{-- Section Lampiran Utama Tiket --}}
-<div class="card border-0 shadow-sm rounded-4 mb-4">
-    <div class="card-header bg-transparent border-0 px-3 pt-3 pb-2">
-        <h3 class="card-title fw-semibold mb-0">
-            <i class="bi bi-paperclip me-2"></i> Lampiran Awal
-        </h3>
-    </div>
-    <div class="card-body p-3">
-        @if ($ticket->attachments && $ticket->attachments->count() > 0)
-            <div class="row g-2">
-                @foreach ($ticket->attachments as $attachment)
-                    <div class="col-md-6">
-                        <div class="border rounded-3 p-2 d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center text-truncate me-2">
-                                <i class="bi bi-file-earmark-arrow-down text-primary fs-4 me-2"></i>
-                                <div class="text-truncate">
-                                    <div class="fw-semibold small text-truncate" title="{{ $attachment->original_name }}">{{ $attachment->original_name }}</div>
-                                    <span class="text-muted extra-small">{{ number_format($attachment->file_size / 1024, 1) }} KB</span>
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-transparent border-0 px-3 pt-3 pb-2">
+                    <h3 class="card-title fw-semibold mb-0">
+                        <i class="bi bi-paperclip me-2"></i> Lampiran Awal
+                    </h3>
+                </div>
+                <div class="card-body p-3">
+                    @if ($ticket->attachments && $ticket->attachments->count() > 0)
+                        <div class="row g-2">
+                            @foreach ($ticket->attachments as $attachment)
+                                <div class="col-md-6">
+                                    <div class="border rounded-3 p-2 d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center text-truncate me-2">
+                                            <i class="bi bi-file-earmark-arrow-down text-primary fs-4 me-2"></i>
+                                            <div class="text-truncate">
+                                                <div class="fw-semibold small text-truncate"
+                                                    title="{{ $attachment->original_name }}">
+                                                    {{ $attachment->original_name }}</div>
+                                                <span
+                                                    class="text-muted extra-small">{{ number_format($attachment->file_size / 1024, 1) }}
+                                                    KB</span>
+                                            </div>
+                                        </div>
+                                        <a href="{{ Storage::url($attachment->path) }}" target="_blank"
+                                            class="btn btn-sm btn-white border rounded-pill d-inline-flex align-items-center text-truncate"
+                                            style="max-width: 250px;">
+                                            <i class="bi bi-file-earmark me-1 text-primary"></i>
+                                            <span class="text-truncate small">{{ $attachment->original_name }}</span>
+                                        </a>
+                                    </div>
                                 </div>
-                            </div>
-                            <a href="{{ Storage::url($attachment->file_path) }}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill"><i class="bi bi-download"></i></a>
+                            @endforeach
                         </div>
-                    </div>
-                @endforeach
+                    @else
+                        <p class="text-muted small mb-0">Tidak ada lampiran pada pembuatan tiket awal.</p>
+                    @endif
+                </div>
             </div>
-        @else
-            <p class="text-muted small mb-0">Tidak ada lampiran pada pembuatan tiket awal.</p>
-        @endif
-    </div>
-</div>
-{{-- Section Percakapan / Diskusi Komentar --}}
+            {{-- Section Percakapan / Diskusi Komentar --}}
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-header bg-transparent border-0 px-3 pt-3 pb-2">
                     <h3 class="card-title fw-semibold mb-0">
@@ -258,7 +267,7 @@
                                                 </div>
                                                 <div class="d-flex flex-wrap gap-2">
                                                     @foreach ($comment->attachments as $attachment)
-                                                        <a href="{{ Storage::url($attachment->file_path) }}" target="_blank"
+                                                        <a href="{{ Storage::url($attachment->path) }}" target="_blank"
                                                             class="btn btn-sm btn-white border rounded-pill d-inline-flex align-items-center text-truncate"
                                                             style="max-width: 250px;">
                                                             <i class="bi bi-file-earmark me-1 text-primary"></i>

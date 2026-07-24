@@ -103,7 +103,7 @@
                                                     <a href="{{ route('supervisor.teams.show', $stats['team_id']) }}" class="text-decoration-none text-dark">
                                                         {{ $stats['team_name'] }}
                                                     </a>
-                                                </td>
+                                                </td>   
                                                 <td class="text-center">
                                                     <span class="badge text-bg-light border text-secondary">{{ $stats['open_active'] }}</span>
                                                 </td>

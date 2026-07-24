@@ -11,6 +11,7 @@ use App\Models\SlaRule;
 use App\Models\Ticket;
 use App\Services\TicketSlaService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class TicketController extends Controller
@@ -65,35 +66,50 @@ class TicketController extends Controller
         $validated['created_by'] = auth()->id();
 
         $slaRule = SlaRule::where('priority_id', $validated['priority_id'])->first();
-        if ($slaRule) {
-            $validated['due_date'] = $slaService->calculateDueDate(now(), $slaRule, 'open');
-        } else {
-            $validated['due_date'] = null;
-        }
+        $validated['due_date'] = $slaRule
+            ? $slaService->calculateDueDate(now(), $slaRule, 'open')
+            : null;
 
-        $ticket = Ticket::create($validated);
-        $ticket->labels()->sync($request->input('labels', []));
+        $ticket = DB::transaction(function () use ($validated, $request) {
+            $ticket = Ticket::create($validated);
+            $ticket->labels()->sync($request->input('labels', []));
 
-        return redirect()
-            ->route('customer.tickets.show', $ticket)
-            ->with('success', "Tiket {$ticket->ticket_number} berhasil dibuat.");
+            if ($request->hasFile('attachments')) {
+                foreach ($request->file('attachments') as $file) {
+                    $storedPath = $file->store('attachments', 'public');
+
+                    $ticket->attachments()->create([
+                        'uploaded_by'   => auth()->id(),
+                        'original_name' => $file->getClientOriginalName(),
+                        'stored_name'   => basename($storedPath),
+                        'path'          => $storedPath,
+                        'mime_type'     => $file->getClientMimeType(),
+                        'size'          => $file->getSize(),
+                    ]);
+                }
+            }
+
+            return $ticket;
+        });
+
+        return redirect()->route('customer.tickets.show', $ticket)->with('success', "Tiket berhasil dibuat.");
     }
 
-        public function show(Ticket $ticket): View
-        {
-            abort_if($ticket->created_by !== auth()->id(), 403);
+    public function show(Ticket $ticket): View
+    {
+        abort_if($ticket->created_by !== auth()->id(), 403);
 
-            $ticket->load([
-                'creator',
-                'assignedAgent',
-                'category',
-                'priority',
-                'labels',
-                'comments.user',
-                'attachments',
-                'activityLogs' => fn($q) => $q->latest(),
-            ]);
+        $ticket->load([
+            'creator',
+            'assignedAgent',
+            'category',
+            'priority',
+            'labels',
+            'comments.user',
+            'attachments',
+            'activityLogs' => fn($q) => $q->latest(),
+        ]);
 
-            return view('customer.ticket.show', compact('ticket'));
-        }
+        return view('customer.ticket.show', compact('ticket'));
+    }
 }

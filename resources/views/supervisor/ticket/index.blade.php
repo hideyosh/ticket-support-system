@@ -107,9 +107,6 @@
                         <h3 class="card-title mb-0 fw-semibold">
                             Daftar Tiket
                         </h3>
-                        <a href="{{ route('supervisor.tickets.create') }}" class="btn btn-primary btn-sm">
-                            <i class="bi bi-plus-lg"></i> Buat Tiket
-                        </a>
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -204,18 +201,6 @@
                                                 class="btn btn-info btn-sm" title="Detail">
                                                 <i class="bi bi-eye"></i>
                                             </a>
-                                            <a href="{{ route('supervisor.tickets.edit', $ticket) }}"
-                                                class="btn btn-warning btn-sm" title="Edit">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                            <form action="{{ route('supervisor.tickets.destroy', $ticket) }}" method="POST"
-                                                class="d-inline"
-                                                onsubmit="return confirm('Yakin ingin menghapus tiket {{ $ticket->ticket_number }}? Tindakan ini tidak bisa dibatalkan.');">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="btn btn-danger btn-sm" title="Hapus">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </form>
                                         </td>
                                     </tr>
                                 @empty

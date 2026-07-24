@@ -190,7 +190,7 @@
                                         <td class="text-center text-nowrap">
                                             <a href="{{ route('agent.tickets.show', $ticket) }}"
                                                 class="btn btn-info btn-sm" title="Detail">
-                                                <i class="bi bi-eye"></i> Detail
+                                                <i class="bi bi-eye"></i> 
                                             </a>
                                         </td>
                                     </tr>

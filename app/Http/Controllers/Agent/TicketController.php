@@ -6,15 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Priority;
 use App\Models\Ticket;
+use App\Services\TicketStatusService;
+use Illuminate\Http\RedirectResponse;
+use App\Exceptions\InvalidStatusTransitionException;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class TicketController extends Controller
 {
-    /**
-     * Tampilkan semua tiket yang ditugaskan ke Agent (auth()->id()).
-     * Menggunakan Eager Loading untuk mencegah N+1 query.
-     */
     public function index(Request $request): View
     {
         $agentId = auth()->id();
@@ -53,10 +52,7 @@ class TicketController extends Controller
         return view('agent.ticket.index', compact('tickets', 'categories', 'priorities'));
     }
 
-    /**
-     * Tampilkan detail tiket.
-     */
-    public function show(Ticket $ticket): View
+    public function show(Ticket $ticket,  TicketStatusService $ticketStatusService): View
     {
         $ticket->load([
             'creator',
@@ -69,6 +65,27 @@ class TicketController extends Controller
             'activityLogs' => fn($q) => $q->latest(),
         ]);
 
-        return view('agent.ticket.show', compact('ticket'));
+        $allowedStatuses = $ticketStatusService->allowedTransitions($ticket->status);
+        $statusColorMap  = $ticketStatusService->statusColorMap();
+
+        return view('agent.ticket.show', compact(
+            'ticket',
+            'allowedStatuses',
+            'statusColorMap',
+        ));
+    }
+
+    public function status(Request $request, Ticket $ticket, TicketStatusService $ticketStatusService): RedirectResponse
+    {
+        $request->validate([
+            'status' => ['required', 'string'],
+        ]);
+
+        try {
+            $ticketStatusService->transition($ticket, $request->status);
+            return redirect()->back()->with('success', 'Status tiket berhasil diperbarui.');
+        } catch (InvalidStatusTransitionException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
     }
 }
