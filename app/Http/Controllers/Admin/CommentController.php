@@ -6,8 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCommentRequest;
 use App\Models\Comment;
 use App\Models\Ticket;
+use App\Services\ActivityLogger;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Http\Request;
+// use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class CommentController extends Controller
@@ -24,6 +25,12 @@ class CommentController extends Controller
                 'body'    => $validated['body'],
                 'type'    => $validated['type'],
             ]);
+
+            if ($validated['type'] === 'internal') {
+                ActivityLogger::log($ticket, 'Internal comment added');
+            } else {
+                ActivityLogger::log($ticket, 'Public comment added');
+            }
 
             if ($request->hasFile('attachments')) {
                 foreach ($request->file('attachments') as $file) {

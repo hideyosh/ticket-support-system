@@ -9,6 +9,8 @@ use App\Models\Ticket;
 use App\Models\User;
 use App\Services\TicketStatusService;
 use App\Exceptions\InvalidStatusTransitionException;
+use App\Http\Requests\UpdateTicketStatusRequest;
+use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -106,17 +108,26 @@ class TicketController extends Controller
 
         $previousStatus = $ticket->status;
         $newAgentId     = $request->assigned_to;
+        $oldAgentId     = $ticket->assigned_to;
 
         $ticket->update(['assigned_to' => $newAgentId]);
 
-        // Auto-transition: open → assigned saat agent di-assign
         if ($newAgentId && $previousStatus === 'open') {
             $ticketStatusService->transition($ticket, 'assigned');
         }
 
-        // Auto-revert: assigned → open saat agent di-unassign
         if (!$newAgentId && $previousStatus === 'assigned') {
             $ticket->update(['status' => 'open']);
+        }
+
+        if ($oldAgentId !== $newAgentId) {
+            ActivityLogger::log(
+                ticket: $ticket,
+                action: 'Agent assign',
+                field: 'assigned_to',
+                old: $oldAgentId ? User::find($oldAgentId)?->name : null,
+                new: $newAgentId ? User::find($newAgentId)?->name : null,
+            );
         }
 
         $message = $newAgentId
@@ -129,14 +140,21 @@ class TicketController extends Controller
     /**
      * Ubah status tiket dengan validasi transisi ketat via TicketStatusService.
      */
-    public function status(Request $request, Ticket $ticket, TicketStatusService $ticketStatusService): RedirectResponse
+    public function status(UpdateTicketStatusRequest $request, Ticket $ticket, TicketStatusService $ticketStatusService): RedirectResponse
     {
-        $request->validate([
-            'status' => ['required', 'string'],
-        ]);
+        $oldStatus = $ticket->status;
 
         try {
             $ticketStatusService->transition($ticket, $request->status);
+
+            ActivityLogger::log(
+                ticket: $ticket,
+                action: 'Status changed',
+                field: 'status',
+                old: $oldStatus,
+                new: $ticket->fresh()->status,
+            );
+
             return redirect()->back()->with('success', 'Status tiket berhasil diperbarui.');
         } catch (InvalidStatusTransitionException $e) {
             return redirect()->back()->with('error', $e->getMessage());

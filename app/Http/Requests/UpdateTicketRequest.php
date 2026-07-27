@@ -7,14 +7,9 @@ use Illuminate\Validation\Rule;
 
 class UpdateTicketRequest extends FormRequest
 {
-    /**
-     * Hanya admin yang boleh mengupdate tiket secara penuh.
-     * Supervisor dan Agent hanya boleh update status via UpdateTicketStatusRequest.
-     */
     public function authorize(): bool
     {
-        $role = $this->user()?->role?->role_name;
-        return in_array($role, ['admin', 'supervisor']);
+        return user()->role()->role_name === 'admin';
     }
 
     public function rules(): array

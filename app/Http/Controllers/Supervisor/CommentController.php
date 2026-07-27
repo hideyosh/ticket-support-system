@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCommentRequest;
 use App\Models\Ticket;
 use App\Models\Comment;
+use App\Services\ActivityLogger;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\DB;
 
@@ -24,6 +25,12 @@ class CommentController extends Controller
                 'type'    => $validated['type'],
             ]);
 
+            if ($validated['type'] === 'internal') {
+                ActivityLogger::log($ticket, 'Internal comment added');
+            } else {
+                ActivityLogger::log($ticket, 'Public comment added');
+            }
+
             if ($request->hasFile('attachments')) {
                 foreach ($request->file('attachments') as $file) {
                     $storedPath = $file->store('attachments', 'public');
@@ -36,6 +43,8 @@ class CommentController extends Controller
                         'mime_type'     => $file->getClientMimeType(),
                         'size'          => $file->getSize(),
                     ]);
+
+                    ActivityLogger::log($ticket, 'Attachment uploaded');
                 }
             }
 
