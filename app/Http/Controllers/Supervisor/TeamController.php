@@ -94,7 +94,7 @@ class TeamController extends Controller
      */
     public function edit(Team $team)
     {
-        return view('supervisor.teams.edit', compact('team'));
+        return view('supervisor.team.edit', compact('team'));
     }
     /**
      * Update the specified resource in storage.

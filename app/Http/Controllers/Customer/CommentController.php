@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreCommentRequest;
 use App\Models\Ticket;
 use App\Models\Comment;
-use Illuminate\Http\Request;
+use App\Services\ActivityLogger;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\DB;
 
@@ -13,20 +14,18 @@ class CommentController extends Controller
 {
     use AuthorizesRequests;
 
-    public function store(Request $request, Ticket $ticket)
+    public function store(StoreCommentRequest $request, Ticket $ticket)
     {
-        $validated = $request->validate([
-            'body' => ['required', 'string', 'max:5000'],
-            'attachments' => ['nullable', 'array'],
-            'attachments.*' => ['file', 'max:10240', 'mimes:jpg,jpeg,png,pdf,doc,docx,xls,xlsx'],
-        ]);
+        $validated = $request->validated();
 
         $comment = DB::transaction(function () use ($ticket, $validated, $request) {
             $comment = $ticket->comments()->create([
                 'user_id' => auth()->id(),
                 'body'    => $validated['body'],
-                'type'    => 'public_comment',
+                'type'    => $validated['type'],
             ]);
+
+            ActivityLogger::log($ticket, 'Public comment added');
 
             if ($request->hasFile('attachments')) {
                 foreach ($request->file('attachments') as $file) {
@@ -40,12 +39,12 @@ class CommentController extends Controller
                         'mime_type'     => $file->getClientMimeType(),
                         'size'          => $file->getSize(),
                     ]);
+                    ActivityLogger::log($ticket, 'Attachment uploaded');
                 }
             }
 
             return $comment;
         });
-
 
         return back()->with('success', 'Komentar berhasil ditambahkan.');
     }

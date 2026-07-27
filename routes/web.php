@@ -38,6 +38,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/tickets/{ticket}/comments', [Admin\CommentController::class, 'store'])->name('comments.store');
     Route::delete('/tickets/{ticket}/comments/{comment}', [Admin\CommentController::class, 'destroy'])->name('comments.destroy');
     Route::get('/activity-logs', [Admin\ActivityLogController::class, 'index'])->name('activity-logs.index');
+    Route::get('/activity-logs/{activityLog}', [Admin\ActivityLogController::class, 'show'])->name('activity-logs.show');
 });
 
 Route::middleware(['auth', 'role:customer'])->prefix('customer')->name('customer.')->group(function () {
@@ -56,6 +57,7 @@ Route::middleware(['auth', 'role:supervisor'])->prefix('supervisor')->name('supe
     Route::post('/tickets/{ticket}/comments', [Supervisor\CommentController::class, 'store'])->name('comments.store');
     Route::delete('/tickets/{ticket}/comments/{comment}', [Supervisor\CommentController::class, 'destroy'])->name('comments.destroy');
     Route::post('/teams/{team}/members', [Supervisor\TeamController::class, 'addMember'])->name('teams.members.store');
+    Route::get('/activity-logs', [Supervisor\ActivityLogController::class, 'index'])->name('activity-logs.index');
 });
 
 Route::middleware(['auth', 'role:agent'])->prefix('agent')->name('agent.')->group(function () {
@@ -64,6 +66,8 @@ Route::middleware(['auth', 'role:agent'])->prefix('agent')->name('agent.')->grou
     Route::patch('/tickets/{ticket}/status', [Agent\TicketController::class, 'status'])->name('tickets.status');
     Route::post('/tickets/{ticket}/comments', [Agent\CommentController::class, 'store'])->name('comments.store');
     Route::delete('/tickets/{ticket}/comments/{comment}', [Agent\CommentController::class, 'destroy'])->name('comments.destroy');
+    Route::get('/teams/{team}', [Agent\TeamController::class, 'show'])->name('teams.show');
+    Route::get('/activity-logs', [Agent\ActivityLogController::class, 'index'])->name('activity-logs.index');
 });
 
 require __DIR__ . '/auth.php';

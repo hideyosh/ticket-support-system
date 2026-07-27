@@ -3,15 +3,21 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreUserRequest;
+use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
 use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Arr;
-use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(User::class, 'user');
+    }
+    
     public function index(Request $request)
     {
         $roleIds = array_filter(explode(',', (string) $request->input('role_id')));
@@ -41,26 +47,9 @@ class UserController extends Controller
         return view('admin.users.create', compact('roles'));
     }
 
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => [
-                'required',
-                'string',
-                'email',
-                'max:255',
-                Rule::unique('users', 'email'),
-            ],
-            'password' => [
-                'required',
-                'string',
-                'min:8',
-            ],
-            'role_id' => ['required', Rule::exists('roles', 'id')],
-            'team_id' => ['nullable', Rule::exists('teams', 'id')],
-        ]);
-
+        $validated = $request->validated();
         $validated['password'] = Hash::make($validated['password']);
 
         User::create($validated);
@@ -80,28 +69,12 @@ class UserController extends Controller
         return view('admin.users.edit', compact('user', 'roles'));
     }
 
-    public function update(Request $request, User $user)
+    public function update(UpdateUserRequest $request, User $user)
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => [
-                'required',
-                'string',
-                'email',
-                'max:255',
-                Rule::unique('users', 'email')->ignore($user->id),
-            ],
-            'password' => [
-                'nullable',
-                'string',
-                'min:8',
-            ],
-            'role_id' => ['required', Rule::exists('roles', 'id')],
-            'team_id' => ['nullable', Rule::exists('teams', 'id')],
-        ]);
+        $validated = $request->validated();
 
         if (empty($validated['password'])) {
-            $validated = Arr::except($validated, ['password']);
+            $validated = Arr::except($validated, ['password', 'password_confirmation']);
         } else {
             $validated['password'] = Hash::make($validated['password']);
         }

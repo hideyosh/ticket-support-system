@@ -14,13 +14,13 @@ class LabelSeeder extends Seeder
     public function run(): void
     {
         Label::insert([
-            ['label_name' => 'Bug', 'created_at' => now(), 'updated_at' => now()],
-            ['label_name' => 'Feature Request', 'created_at' => now(), 'updated_at' => now()],
-            ['label_name' => 'Improvement', 'created_at' => now(), 'updated_at' => now()],
             ['label_name' => 'Urgent', 'created_at' => now(), 'updated_at' => now()],
-            ['label_name' => 'Question', 'created_at' => now(), 'updated_at' => now()],
-            ['label_name' => 'Billing', 'created_at' => now(), 'updated_at' => now()],
-            ['label_name' => 'Technical Support', 'created_at' => now(), 'updated_at' => now()],
+            ['label_name' => 'Backend', 'created_at' => now(), 'updated_at' => now()],
+            ['label_name' => 'Frontend', 'created_at' => now(), 'updated_at' => now()],
+            ['label_name' => 'Database', 'created_at' => now(), 'updated_at' => now()],
+            ['label_name' => 'Security', 'created_at' => now(), 'updated_at' => now()],
+            ['label_name' => 'Needs Follow Up', 'created_at' => now(), 'updated_at' => now()],
+            ['label_name' => 'Customer Waiting', 'created_at' => now(), 'updated_at' => now()],
         ]);
     }
 }

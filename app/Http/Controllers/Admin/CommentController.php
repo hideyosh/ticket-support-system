@@ -3,23 +3,20 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreCommentRequest;
 use App\Models\Comment;
 use App\Models\Ticket;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CommentController extends Controller
 {
     use AuthorizesRequests;
 
-    public function store(Request $request, Ticket $ticket)
+    public function store(StoreCommentRequest $request, Ticket $ticket)
     {
-        $validated = $request->validate([
-            'body' => ['required', 'string', 'max:5000'],
-            'type' => ['required', 'in:public_comment,internal_note'],
-            'attachments' => ['nullable', 'array'],
-            'attachments.*' => ['file', 'max:10240', 'mimes:jpg,jpeg,png,pdf,doc,docx,xls,xlsx'],
-        ]);
+        $validated = $request->validated();
 
         $comment = DB::transaction(function () use ($ticket, $validated, $request) {
             $comment = $ticket->comments()->create([
@@ -45,7 +42,6 @@ class CommentController extends Controller
 
             return $comment;
         });
-
 
         return back()->with('success', 'Komentar berhasil ditambahkan.');
     }

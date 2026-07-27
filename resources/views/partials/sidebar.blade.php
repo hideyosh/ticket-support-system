@@ -162,17 +162,10 @@
                         </a>
                         <ul class="nav nav-treeview">
                             <li class="nav-item">
-                                <a href="#"
+                                <a href="{{ route('admin.activity-logs.index') }}"
                                     class="nav-link {{ request()->routeIs('admin.activity-logs.*') ? 'active' : '' }}">
                                     <i class="nav-icon bi bi-clock-history"></i>
                                     <p>Activity logs</p>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="#"
-                                    class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
-                                    <i class="nav-icon bi bi-sliders"></i>
-                                    <p>Pengaturan</p>
                                 </a>
                             </li>
                         </ul>

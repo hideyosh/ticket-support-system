@@ -86,4 +86,18 @@ class Ticket extends Model
             'escalated' => 'bg-danger',
         };
     }
+
+    public function customerVisibleLogs()
+    {
+        return $this->activityLogs()
+            ->whereIn('action', [
+                'Ticket created',
+                'Status changed',
+                'Comment added',
+                'Attachment uploaded',
+                'Ticket resolved',
+                'Ticket reopened',
+            ])
+            ->latest();
+    }
 }

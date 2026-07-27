@@ -3,13 +3,18 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreSlaRuleRequest;
+use App\Http\Requests\UpdateSlaRuleRequest;
 use App\Models\SlaRule;
 use App\Models\Priority;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class SlaRuleController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(SlaRule::class, 'sla_rule');
+    }
+
     public function index()
     {
         $slaRules = SlaRule::with('priority')->latest()->paginate(15);
@@ -22,26 +27,17 @@ class SlaRuleController extends Controller
         return view('admin.sla_rules.create', compact('priorities'));
     }
 
-    public function store(Request $request)
+    public function store(StoreSlaRuleRequest $request)
     {
-        $validated = $request->validate([
-            'priority_id' => [
-                'required',
-                Rule::exists('priorities', 'id'),
-                Rule::unique('sla_rules', 'priority_id'),
-            ],
-            'response_time' => ['required', 'integer', 'min:1'],
-            'resolution_time' => ['required', 'integer', 'min:1', 'gt:response_time'],
-        ]);
-
+        $validated = $request->validated();
         SlaRule::create($validated);
+
         return redirect()->route('admin.sla-rules.index')->with('success', 'SLA Rule berhasil dibuat.');
     }
 
     public function show(SlaRule $slaRule)
     {
-        $slaRule->load('priority');
-        return view('admin.sla_rules.show', compact('slaRule'));
+        //
     }
 
     public function edit(SlaRule $slaRule)
@@ -50,17 +46,9 @@ class SlaRuleController extends Controller
         return view('admin.sla_rules.edit', compact('slaRule', 'priorities'));
     }
 
-    public function update(Request $request, SlaRule $slaRule)
+    public function update(UpdateSlaRuleRequest $request, SlaRule $slaRule)
     {
-        $validated = $request->validate([
-            'priority_id' => [
-                'required',
-                Rule::exists('priorities', 'id'),
-                Rule::unique('sla_rules', 'priority_id')->ignore($slaRule->id),
-            ],
-            'response_time' => ['required', 'integer', 'min:1'],
-            'resolution_time' => ['required', 'integer', 'min:1', 'gt:response_time'],
-        ]);
+        $validated = $request->validated();
 
         $slaRule->update($validated);
         return redirect()->route('admin.sla-rules.index')->with('success', 'SLA Rule berhasil diperbarui.');

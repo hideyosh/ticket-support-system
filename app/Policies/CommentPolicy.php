@@ -4,12 +4,11 @@ namespace App\Policies;
 
 use App\Models\User;
 use App\Models\Comment;
-use Illuminate\Auth\Access\Response;
 
 class CommentPolicy
 {
     /**
-     * Memeriksa apakah user diizinkan melihat daftar komentar.
+     * Melihat daftar komentar.
      */
     public function viewAny(User $user): bool
     {
@@ -17,58 +16,50 @@ class CommentPolicy
     }
 
     /**
-     * Memeriksa apakah user diizinkan melihat spesifik komentar tertentu.
+     * Melihat detail komentar.
      */
-    public function view(User $user, Comment $comment): Response
+    public function view(User $user, Comment $comment): bool
     {
-        // Safe-navigation operator (?->) mencegah error jika role bernilai null
         $roleName = $user->role?->role_name;
 
-        // Jika user adalah Customer dan komentar bertipe internal_note, tolak akses
+        // Customer tidak boleh melihat internal_note
         if ($roleName === 'customer' && $comment->type === 'internal_note') {
-            return Response::deny('Anda tidak memiliki akses untuk melihat catatan internal.');
+            return false;
         }
 
-        return Response::allow();
+        return true;
     }
 
     /**
-     * Memeriksa apakah user diizinkan membuat komentar berdasarkan tipe yang dikirim.
-     *
-     * Cara panggil di Controller: $this->authorize('create', [Comment::class, $type]);
-     * Cara panggil di Blade: @can('create', [App\Models\Comment::class, 'internal_note'])
+     * Membuat komentar sesuai tipe.
      */
-    public function create(User $user, string $type = 'public_comment'): Response
+    public function create(User $user, string $type = 'public_comment'): bool
     {
         $roleName = $user->role?->role_name;
 
-        // Tolak jika Customer mencoba membuat internal_note
+        // Customer tidak boleh membuat internal_note
         if ($roleName === 'customer' && $type === 'internal_note') {
-            return Response::deny('Hanya Agent, Supervisor, dan Admin yang dapat membuat catatan internal.');
+            return false;
         }
 
-        return Response::allow();
+        return true;
     }
 
     /**
-     * Memeriksa apakah user diizinkan memperbarui komentar.
+     * Memperbarui komentar.
      */
-    public function update(User $user, Comment $comment): Response
+    public function update(User $user, Comment $comment): bool
     {
-        // User hanya dapat memperbarui komentar ciptaannya sendiri
-        return $user->id === $comment->user_id
-            ? Response::allow()
-            : Response::deny('Anda hanya dapat mengubah komentar milik Anda sendiri.');
+        // Hanya pemilik komentar yang boleh mengubah
+        return $user->id === $comment->user_id;
     }
 
     /**
-     * Memeriksa apakah user diizinkan menghapus komentar.
+     * Menghapus komentar.
      */
-    public function delete(User $user, Comment $comment): Response
+    public function delete(User $user, Comment $comment): bool
     {
-        // Setiap user HANYA dapat menghapus komentar milik mereka sendiri
-        return $user->id === $comment->user_id
-            ? Response::allow()
-            : Response::deny('Anda hanya dapat menghapus komentar milik Anda sendiri.');
+        // Hanya pemilik komentar yang boleh menghapus
+        return $user->id === $comment->user_id;
     }
 }

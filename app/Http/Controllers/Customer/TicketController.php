@@ -3,19 +3,23 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\TicketRequest;
+use App\Http\Requests\StoreTicketRequest;
 use App\Models\Category;
 use App\Models\Label;
 use App\Models\Priority;
 use App\Models\SlaRule;
 use App\Models\Ticket;
+use App\Services\ActivityLogger;
 use App\Services\TicketSlaService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\View\View;
 
 class TicketController extends Controller
 {
+    use AuthorizesRequests;
+
     public function index(): View
     {
         $query = Ticket::with(['category', 'priority', 'labels'])
@@ -57,7 +61,7 @@ class TicketController extends Controller
         return view('customer.ticket.create', compact('categories', 'priorities', 'labels'));
     }
 
-    public function store(TicketRequest $request, TicketSlaService $slaService): RedirectResponse
+    public function store(StoreTicketRequest $request, TicketSlaService $slaService): RedirectResponse
     {
         $validated = $request->validated();
         $year = now()->year;
@@ -74,6 +78,8 @@ class TicketController extends Controller
             $ticket = Ticket::create($validated);
             $ticket->labels()->sync($request->input('labels', []));
 
+            ActivityLogger::log($ticket, 'Ticket created');
+
             if ($request->hasFile('attachments')) {
                 foreach ($request->file('attachments') as $file) {
                     $storedPath = $file->store('attachments', 'public');
@@ -86,6 +92,8 @@ class TicketController extends Controller
                         'mime_type'     => $file->getClientMimeType(),
                         'size'          => $file->getSize(),
                     ]);
+
+                    ActivityLogger::log($ticket, 'Attachment uploaded');
                 }
             }
 
@@ -97,7 +105,9 @@ class TicketController extends Controller
 
     public function show(Ticket $ticket): View
     {
-        abort_if($ticket->created_by !== auth()->id(), 403);
+        $this->authorize('view', $ticket);
+
+        $logs = $ticket->customerVisibleLogs()->get();
 
         $ticket->load([
             'creator',
@@ -107,9 +117,8 @@ class TicketController extends Controller
             'labels',
             'comments.user',
             'attachments',
-            'activityLogs' => fn($q) => $q->latest(),
         ]);
 
-        return view('customer.ticket.show', compact('ticket'));
+        return view('customer.ticket.show', compact('ticket', 'logs'));
     }
 }

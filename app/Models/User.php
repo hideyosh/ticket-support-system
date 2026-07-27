@@ -67,6 +67,11 @@ class User extends Authenticatable
         return $this->belongsTo(Team::class, 'team_id');
     }
 
+    public function activityLogs() : HasMany {
+    
+        return $this->hasMany(ActivityLog::class, 'user_id');
+    }
+
     public function supervisedTickets()
     {
         return Ticket::whereHas('agent.team', function ($query) {

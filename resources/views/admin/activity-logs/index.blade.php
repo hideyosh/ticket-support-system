@@ -24,7 +24,6 @@
                             <i class="bi bi-clock-history me-1"></i>
                             Riwayat Aktivitas
                         </h3>
-                        <span class="text-muted small">{{ $logs->total() }} entri</span>
                     </div>
 
                     {{-- Filter --}}
@@ -92,6 +91,7 @@
                                 <th>Aksi</th>
                                 <th>Ticket</th>
                                 <th>Perubahan</th>
+                                <th style="width: 70px;" class="text-center">Detail</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -111,7 +111,7 @@
                                     <td>
                                         @if ($log->ticket)
                                             <a href="{{ route('admin.tickets.show', $log->ticket) }}">
-                                                #{{ $log->ticket->id }} — {{ \Illuminate\Support\Str::limit($log->ticket->title, 30) }}
+                                                {{ Str::limit($log->ticket->title, 30) }}
                                             </a>
                                         @else
                                             <span class="text-muted">Ticket dihapus</span>
@@ -127,10 +127,16 @@
                                             <span class="text-muted">—</span>
                                         @endif
                                     </td>
+                                    <td class="text-center">
+                                        <a href="{{ route('admin.activity-logs.show', $log) }}"
+                                            class="btn btn-info btn-sm" title="Lihat Detail">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-center py-4">Belum ada aktivitas yang tercatat.</td>
+                                    <td colspan="6" class="text-center py-4">Belum ada aktivitas yang tercatat.</td>
                                 </tr>
                             @endforelse
                         </tbody>

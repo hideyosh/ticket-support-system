@@ -14,11 +14,12 @@ class CategorySeeder extends Seeder
     public function run(): void
     {
         Category::insert([
-            ['category_name' => 'Software', 'created_at' => now()],
-            ['category_name' => 'Hardware', 'created_at' => now()],
-            ['category_name' => 'Network', 'created_at' => now()],
-            ['category_name' => 'Database', 'created_at' => now()],
-            ['category_name' => 'Security', 'created_at' => now()],
+            ['category_name' => 'Technical Support', 'created_at' => now()],
+            ['category_name' => 'Account Issue', 'created_at' => now()],
+            ['category_name' => 'Billing', 'created_at' => now()],
+            ['category_name' => 'Feature Request', 'created_at' => now()],
+            ['category_name' => 'Bug Report', 'created_at' => now()],
+            ['category_name' => 'Infrastructure', 'created_at' => now()],
         ]);
     }
 }
