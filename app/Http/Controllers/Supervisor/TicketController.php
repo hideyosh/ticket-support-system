@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Supervisor;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\Label;
 use App\Models\Priority;
 use App\Models\Ticket;
 use App\Models\User;
@@ -21,37 +22,20 @@ class TicketController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = Ticket::with(['creator', 'assignedAgent', 'category', 'priority', 'labels']);
+        $tickets = Ticket::with(['creator', 'assignedAgent', 'category', 'priority', 'labels'])
+            ->filter($request->all(), auth()->user())
+            ->paginate(15)
+            ->withQueryString();
 
-        // Filter: pencarian no. tiket / judul
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('ticket_number', 'like', "%{$search}%")
-                    ->orWhere('title', 'like', "%{$search}%");
-            });
-        }
-
-        // Filter: status
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        // Filter: prioritas
-        if ($request->filled('priority_id')) {
-            $query->where('priority_id', $request->priority_id);
-        }
-
-        // Filter: kategori
-        if ($request->filled('category_id')) {
-            $query->where('category_id', $request->category_id);
-        }
-
-        $tickets    = $query->latest()->paginate(15)->withQueryString();
         $categories = Category::select('id', 'category_name')->orderBy('category_name')->get();
         $priorities = Priority::select('id', 'priority_name')->get();
+        $labels     = Label::select('id', 'label_name')->orderBy('label_name')->get();
+        $agents     = User::whereHas('role', fn($q) => $q->where('role_name', 'agent'))
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
 
-        return view('supervisor.ticket.index', compact('tickets', 'categories', 'priorities'));
+        return view('supervisor.ticket.index', compact('tickets', 'categories', 'priorities', 'labels', 'agents'));
     }
 
     public function show(Ticket $ticket, TicketStatusService $ticketStatusService): View

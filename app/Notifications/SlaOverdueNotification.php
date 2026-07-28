@@ -19,7 +19,7 @@ class SlaOverdueNotification extends Notification
     }
 
     public function toMail(object $notifiable): MailMessage
-    {
+    {   
         return (new MailMessage)
             ->subject("[SLA Overdue] Ticket #{$this->ticket->ticket_number}")
             ->greeting("Halo {$notifiable->name},")

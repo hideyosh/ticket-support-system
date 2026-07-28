@@ -2,6 +2,26 @@
 
 @section('content')
 
+    @php
+        $activeFilterKeys = ['status', 'priority_id', 'category_id', 'label_id', 'created_from', 'created_to', 'due_from', 'due_to', 'overdue'];
+        $activeFilterCount = 0;
+        foreach ($activeFilterKeys as $key) {
+            if (request()->filled($key)) {
+                $activeFilterCount++;
+            }
+        }
+
+        $currentSortBy = request('sort_by', 'created_at');
+        $currentSortOrder = request('sort_order', 'desc');
+
+        function sortAgentUrl($column) {
+            $params = request()->all();
+            $params['sort_by'] = $column;
+            $params['sort_order'] = (request('sort_by') === $column && request('sort_order', 'desc') === 'asc') ? 'desc' : 'asc';
+            return request()->url() . '?' . http_build_query($params);
+        }
+    @endphp
+
     <div class="app-content-header mb-3">
         <div class="container-fluid">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
@@ -22,118 +42,212 @@
 
             {{-- Flash Messages --}}
             @if (session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm rounded-3" role="alert">
                     <i class="bi bi-check-circle-fill me-1"></i> {{ session('success') }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             @endif
             @if (session('error'))
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm rounded-3" role="alert">
                     <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ session('error') }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             @endif
 
-            {{-- Filter Card --}}
-            <div class="card border-0 shadow-sm rounded-4 mb-3">
-                <div class="card-header bg-transparent border-0 px-3 pt-3 pb-1">
-                    <h3 class="card-title fw-semibold mb-0">
-                        <i class="bi bi-funnel me-1"></i> Filter Tiket
-                    </h3>
-                    <div class="card-tools">
-                        <button type="button" class="btn btn-tool" data-lte-toggle="card-collapse">
-                            <i class="bi bi-dash-lg"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="card-body px-3 pb-3 pt-2">
-                    <form method="GET" action="{{ route('agent.tickets.index') }}" class="row g-2 align-items-end">
-                        <div class="col-md-3">
-                            <label class="form-label form-label-sm mb-1">Cari</label>
-                            <input type="text" name="search" class="form-control form-control-sm"
-                                placeholder="No. tiket atau judul..." value="{{ request('search') }}">
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label form-label-sm mb-1">Status</label>
-                            <select name="status" class="form-select form-select-sm">
-                                <option value="">Semua Status</option>
-                                @foreach (['open', 'assigned', 'in_progress', 'waiting_for_customer', 'resolved', 'closed', 'reopened', 'escalated'] as $s)
-                                    <option value="{{ $s }}" {{ request('status') === $s ? 'selected' : '' }}>
-                                        {{ ucfirst(str_replace('_', ' ', $s)) }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label form-label-sm mb-1">Prioritas</label>
-                            <select name="priority_id" class="form-select form-select-sm">
-                                <option value="">Semua Prioritas</option>
-                                @foreach ($priorities as $p)
-                                    <option value="{{ $p->id }}"
-                                        {{ request('priority_id') == $p->id ? 'selected' : '' }}>
-                                        {{ $p->priority_name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label form-label-sm mb-1">Kategori</label>
-                            <select name="category_id" class="form-select form-select-sm">
-                                <option value="">Semua Kategori</option>
-                                @foreach ($categories as $c)
-                                    <option value="{{ $c->id }}"
-                                        {{ request('category_id') == $c->id ? 'selected' : '' }}>
-                                        {{ $c->category_name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <button type="submit" class="btn btn-primary btn-sm me-1">
-                                <i class="bi bi-search"></i> Terapkan
-                            </button>
-                            <a href="{{ route('agent.tickets.index') }}" class="btn btn-secondary btn-sm">
-                                <i class="bi bi-x-circle"></i> Reset
-                            </a>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            {{-- Tabel Tiket --}}
+            {{-- Filament Style Table Container --}}
             <div class="card border-0 shadow-sm rounded-4">
-                <div class="card-header bg-transparent border-0 px-3 pt-3 pb-1">
-                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-                        <h3 class="card-title mb-0 fw-semibold">
-                            Daftar Tiket Ditugaskan
-                        </h3>
+                {{-- Table Toolbar Header --}}
+                <div class="card-header bg-white border-bottom-0 p-3 rounded-top-4">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <h4 class="fw-bold mb-0 text-dark me-2 fs-5">Daftar Tiket Ditugaskan</h4>
+                        </div>
+
+                        {{-- Search & Filter Controls --}}
+                        <form method="GET" action="{{ route('agent.tickets.index') }}" id="agentFilterForm" class="d-flex align-items-center gap-2 mb-0 ms-auto">
+                            <input type="hidden" name="sort_by" value="{{ $currentSortBy }}">
+                            <input type="hidden" name="sort_order" value="{{ $currentSortOrder }}">
+
+                            {{-- Search Input (Filament Pill style) --}}
+                            <div class="input-group input-group-sm rounded-pill overflow-hidden border bg-light" style="width: 260px;">
+                                <span class="input-group-text bg-transparent border-0 pe-1 text-muted ps-3">
+                                    <i class="bi bi-search"></i>
+                                </span>
+                                <input type="text" name="search" class="form-control bg-transparent border-0 shadow-none ps-1"
+                                    placeholder="Search..." value="{{ request('search') }}" onchange="document.getElementById('agentFilterForm').submit()">
+                            </div>
+
+                            {{-- Filament Filter Popover --}}
+                            <div class="dropdown">
+                                <button type="button" class="btn btn-outline-secondary btn-sm rounded-3 position-relative d-inline-flex align-items-center justify-content-center p-2"
+                                        id="filamentFilterBtnAgent" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" style="width: 36px; height: 36px;">
+                                    <i class="bi bi-funnel fs-6"></i>
+                                    @if($activeFilterCount > 0)
+                                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white" style="font-size: 9px; padding: 2px 5px;">
+                                            {{ $activeFilterCount }}
+                                        </span>
+                                    @endif
+                                </button>
+
+                                <div class="dropdown-menu dropdown-menu-end p-3 shadow-lg border-0 rounded-4 mt-2" style="width: 360px; max-width: 90vw; z-index: 1050;" aria-labelledby="filamentFilterBtnAgent">
+                                    <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+                                        <h6 class="fw-bold mb-0 text-dark">Filters</h6>
+                                        <a href="{{ route('agent.tickets.index') }}" class="text-danger text-decoration-none small fw-semibold">Reset</a>
+                                    </div>
+
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <label class="form-label form-label-sm fw-medium text-secondary mb-1">Status</label>
+                                            <select name="status" class="form-select form-select-sm rounded-3">
+                                                <option value="">All</option>
+                                                @foreach (['open', 'assigned', 'in_progress', 'waiting_for_customer', 'resolved', 'closed', 'reopened', 'escalated'] as $s)
+                                                    <option value="{{ $s }}" {{ request('status') === $s ? 'selected' : '' }}>
+                                                        {{ ucfirst(str_replace('_', ' ', $s)) }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+
+                                        <div class="col-6">
+                                            <label class="form-label form-label-sm fw-medium text-secondary mb-1">Prioritas</label>
+                                            <select name="priority_id" class="form-select form-select-sm rounded-3">
+                                                <option value="">All</option>
+                                                @foreach ($priorities as $p)
+                                                    <option value="{{ $p->id }}" {{ request('priority_id') == $p->id ? 'selected' : '' }}>
+                                                        {{ $p->priority_name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+
+                                        <div class="col-6">
+                                            <label class="form-label form-label-sm fw-medium text-secondary mb-1">Kategori</label>
+                                            <select name="category_id" class="form-select form-select-sm rounded-3">
+                                                <option value="">All</option>
+                                                @foreach ($categories as $c)
+                                                    <option value="{{ $c->id }}" {{ request('category_id') == $c->id ? 'selected' : '' }}>
+                                                        {{ $c->category_name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <label class="form-label form-label-sm fw-medium text-secondary mb-1">Label</label>
+                                            <select name="label_id" class="form-select form-select-sm rounded-3">
+                                                <option value="">All</option>
+                                                @foreach ($labels as $l)
+                                                    <option value="{{ $l->id }}" {{ request('label_id') == $l->id ? 'selected' : '' }}>
+                                                        {{ $l->label_name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <label class="form-label form-label-sm fw-medium text-secondary mb-1">Tanggal Dibuat</label>
+                                            <div class="input-group input-group-sm">
+                                                <input type="date" name="created_from" class="form-control rounded-start-3" value="{{ request('created_from') }}">
+                                                <span class="input-group-text bg-light text-muted px-2">-</span>
+                                                <input type="date" name="created_to" class="form-control rounded-end-3" value="{{ request('created_to') }}">
+                                            </div>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <label class="form-label form-label-sm fw-medium text-secondary mb-1">Tenggat Waktu</label>
+                                            <div class="input-group input-group-sm">
+                                                <input type="date" name="due_from" class="form-control rounded-start-3" value="{{ request('due_from') }}">
+                                                <span class="input-group-text bg-light text-muted px-2">-</span>
+                                                <input type="date" name="due_to" class="form-control rounded-end-3" value="{{ request('due_to') }}">
+                                            </div>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <div class="form-check form-switch pt-1">
+                                                <input class="form-check-input" type="checkbox" name="overdue" id="overdueCheckAgent" value="1" {{ request('overdue') ? 'checked' : '' }}>
+                                                <label class="form-check-label small fw-semibold text-danger" for="overdueCheckAgent">
+                                                    Hanya Tiket Overdue
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3 pt-2 border-top">
+                                        <button type="submit" class="btn btn-warning w-100 btn-sm fw-semibold rounded-3 text-dark py-2 shadow-sm" style="background-color: #f59e0b; border: none;">
+                                            Apply filters
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
                     </div>
                 </div>
+
+                {{-- Table Content --}}
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
-                            <thead>
-                                <tr>
-                                    <th class="text-nowrap">No. Tiket</th>
+                            <thead class="bg-light">
+                                <tr class="text-secondary small fw-semibold">
+                                    <th class="text-nowrap ps-3">
+                                        No. Tiket
+                                    </th>
                                     <th>Judul</th>
                                     <th>Kategori</th>
-                                    <th>Prioritas</th>
-                                    <th>Status</th>
+                                    <th>
+                                        <a href="{{ sortAgentUrl('priority_id') }}" class="text-secondary text-decoration-none d-inline-flex align-items-center gap-1">
+                                            Prioritas
+                                            @if($currentSortBy === 'priority_id')
+                                                <i class="bi bi-chevron-{{ $currentSortOrder === 'asc' ? 'up' : 'down' }} text-primary"></i>
+                                            @else
+                                                <i class="bi bi-chevron-expand opacity-50"></i>
+                                            @endif
+                                        </a>
+                                    </th>
+                                    <th>
+                                        <a href="{{ sortAgentUrl('status') }}" class="text-secondary text-decoration-none d-inline-flex align-items-center gap-1">
+                                            Status
+                                            @if($currentSortBy === 'status')
+                                                <i class="bi bi-chevron-{{ $currentSortOrder === 'asc' ? 'up' : 'down' }} text-primary"></i>
+                                            @else
+                                                <i class="bi bi-chevron-expand opacity-50"></i>
+                                            @endif
+                                        </a>
+                                    </th>
                                     <th>Dibuat oleh</th>
-                                    <th class="text-nowrap">Tenggat</th>
-                                    <th style="width: 100px;" class="text-center">Aksi</th>
+                                    <th class="text-nowrap">
+                                        <a href="{{ sortAgentUrl('due_at') }}" class="text-secondary text-decoration-none d-inline-flex align-items-center gap-1">
+                                            Tenggat
+                                            @if($currentSortBy === 'due_at' || $currentSortBy === 'due_date')
+                                                <i class="bi bi-chevron-{{ $currentSortOrder === 'asc' ? 'up' : 'down' }} text-primary"></i>
+                                            @else
+                                                <i class="bi bi-chevron-expand opacity-50"></i>
+                                            @endif
+                                        </a>
+                                    </th>
+                                    <th class="text-nowrap">
+                                        <a href="{{ sortAgentUrl('created_at') }}" class="text-secondary text-decoration-none d-inline-flex align-items-center gap-1">
+                                            Dibuat Pada
+                                            @if($currentSortBy === 'created_at')
+                                                <i class="bi bi-chevron-{{ $currentSortOrder === 'asc' ? 'up' : 'down' }} text-primary"></i>
+                                            @else
+                                                <i class="bi bi-chevron-expand opacity-50"></i>
+                                            @endif
+                                        </a>
+                                    </th>
+                                    <th style="width: 100px;" class="text-center pe-3">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse($tickets as $ticket)
                                     <tr>
-                                        <td class="text-nowrap">
+                                        <td class="text-nowrap ps-3">
                                             <a href="{{ route('agent.tickets.show', $ticket) }}"
                                                 class="fw-semibold text-decoration-none font-monospace">
                                                 {{ $ticket->ticket_number }}
                                             </a>
                                         </td>
-                                        <td>{{ Str::limit($ticket->title, 45) }}</td>
+                                        <td>{{ Str::limit($ticket->title, 40) }}</td>
 
                                         <td>{{ $ticket->category->category_name ?? '-' }}</td>
 
@@ -156,8 +270,8 @@
                                                 $statusColors = [
                                                     'open' => 'secondary',
                                                     'assigned' => 'info',
-                                                    'in_progress' => 'warning',
-                                                    'waiting_for_customer' => 'secondary',
+                                                    'in_progress' => 'primary',
+                                                    'waiting_for_customer' => 'warning',
                                                     'resolved' => 'success',
                                                     'closed' => 'dark',
                                                     'reopened' => 'danger',
@@ -187,16 +301,20 @@
                                             @endif
                                         </td>
 
-                                        <td class="text-center text-nowrap">
+                                        <td class="text-nowrap small text-muted">
+                                            {{ $ticket->created_at->format('d/m/Y H:i') }}
+                                        </td>
+
+                                        <td class="text-center text-nowrap pe-3">
                                             <a href="{{ route('agent.tickets.show', $ticket) }}"
                                                 class="btn btn-info btn-sm" title="Detail">
-                                                <i class="bi bi-eye"></i> 
+                                                <i class="bi bi-eye"></i>
                                             </a>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="text-center py-5 text-muted">
+                                        <td colspan="9" class="text-center py-5 text-muted">
                                             <i class="bi bi-inbox fs-1 d-block mb-2 opacity-50"></i>
                                             Tidak ada tiket ditemukan.
                                         </td>
@@ -206,8 +324,15 @@
                         </table>
                     </div>
                 </div>
-                <div class="card-footer clearfix">
-                    {{ $tickets->links() }}
+                <div class="card-footer bg-white border-top-0 py-3 clearfix">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <div class="small text-muted">
+                            Showing {{ $tickets->firstItem() ?? 0 }} to {{ $tickets->lastItem() ?? 0 }} of {{ $tickets->total() }} results
+                        </div>
+                        <div>
+                            {{ $tickets->links() }}
+                        </div>
+                    </div>
                 </div>
             </div>
 

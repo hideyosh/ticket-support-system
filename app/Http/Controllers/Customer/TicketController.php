@@ -17,42 +17,30 @@ use App\Services\TicketSlaService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class TicketController extends Controller
 {
     use AuthorizesRequests;
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        $query = Ticket::with(['category', 'priority', 'labels'])
-            ->where('created_by', auth()->id());
+        $tickets = Ticket::with(['category', 'priority', 'labels', 'assignedAgent'])
+            ->where('created_by', auth()->id())
+            ->filter($request->all(), auth()->user())
+            ->paginate(15)
+            ->withQueryString();
 
-        if (request()->filled('search')) {
-            $search = request('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('ticket_number', 'like', "%{$search}%")
-                    ->orWhere('title', 'like', "%{$search}%");
-            });
-        }
-
-        if (request()->filled('status')) {
-            $query->where('status', request('status'));
-        }
-
-        if (request()->filled('priority_id')) {
-            $query->where('priority_id', request('priority_id'));
-        }
-
-        if (request()->filled('category_id')) {
-            $query->where('category_id', request('category_id'));
-        }
-
-        $tickets = $query->latest()->paginate(15)->withQueryString();
         $categories = Category::select('id', 'category_name')->orderBy('category_name')->get();
         $priorities = Priority::select('id', 'priority_name')->get();
+        $labels     = Label::select('id', 'label_name')->orderBy('label_name')->get();
+        $agents     = User::whereHas('role', fn($q) => $q->where('role_name', 'agent'))
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
 
-        return view('customer.ticket.index', compact('tickets', 'categories', 'priorities'));
+        return view('customer.ticket.index', compact('tickets', 'categories', 'priorities', 'labels', 'agents'));
     }
 
     public function create(): View
