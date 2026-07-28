@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin;
 use App\Http\Controllers\Customer;
 use App\Http\Controllers\Supervisor;
 use App\Http\Controllers\Agent;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -18,6 +19,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::get('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
 });
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -57,7 +61,7 @@ Route::middleware(['auth', 'role:supervisor'])->prefix('supervisor')->name('supe
     Route::post('/tickets/{ticket}/comments', [Supervisor\CommentController::class, 'store'])->name('comments.store');
     Route::delete('/tickets/{ticket}/comments/{comment}', [Supervisor\CommentController::class, 'destroy'])->name('comments.destroy');
     Route::post('/teams/{team}/members', [Supervisor\TeamController::class, 'addMember'])->name('teams.members.store');
-    Route::get('/activity-logs', [Supervisor\ActivityLogController::class, 'index'])->name('activity-logs.index');
+    Route::resource('/activity-logs', Supervisor\ActivityLogController::class)->only(['index', 'show']);
 });
 
 Route::middleware(['auth', 'role:agent'])->prefix('agent')->name('agent.')->group(function () {
@@ -67,7 +71,6 @@ Route::middleware(['auth', 'role:agent'])->prefix('agent')->name('agent.')->grou
     Route::post('/tickets/{ticket}/comments', [Agent\CommentController::class, 'store'])->name('comments.store');
     Route::delete('/tickets/{ticket}/comments/{comment}', [Agent\CommentController::class, 'destroy'])->name('comments.destroy');
     Route::get('/teams/{team}', [Agent\TeamController::class, 'show'])->name('teams.show');
-    Route::get('/activity-logs', [Agent\ActivityLogController::class, 'index'])->name('activity-logs.index');
 });
 
 require __DIR__ . '/auth.php';

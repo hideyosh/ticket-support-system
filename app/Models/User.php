@@ -68,13 +68,13 @@ class User extends Authenticatable
     }
 
     public function activityLogs() : HasMany {
-    
+
         return $this->hasMany(ActivityLog::class, 'user_id');
     }
 
     public function supervisedTickets()
     {
-        return Ticket::whereHas('agent.team', function ($query) {
+        return Ticket::whereHas('assignedAgent.team', function ($query) {
             $query->where('supervisor_id', $this->id);
         });
     }

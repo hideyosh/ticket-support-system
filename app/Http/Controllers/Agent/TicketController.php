@@ -11,11 +11,14 @@ use Illuminate\Http\RedirectResponse;
 use App\Exceptions\InvalidStatusTransitionException;
 use App\Http\Requests\UpdateTicketStatusRequest;
 use App\Services\ActivityLogger;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class TicketController extends Controller
 {
+    use AuthorizesRequests;
+
     public function index(Request $request): View
     {
         $agentId = auth()->id();
@@ -56,6 +59,8 @@ class TicketController extends Controller
 
     public function show(Ticket $ticket,  TicketStatusService $ticketStatusService): View
     {
+        $this->authorize('view', $ticket);
+
         $ticket->load([
             'creator',
             'assignedAgent',

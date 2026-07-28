@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTicketRequest;
+use App\Models\User;
 use App\Models\Category;
 use App\Models\Label;
 use App\Models\Priority;
 use App\Models\SlaRule;
 use App\Models\Ticket;
+use App\Notifications\TicketCreatedNotification;
+use Illuminate\Support\Facades\Notification;
 use App\Services\ActivityLogger;
 use App\Services\TicketSlaService;
 use Illuminate\Http\RedirectResponse;
@@ -99,6 +102,7 @@ class TicketController extends Controller
 
             return $ticket;
         });
+        Notification::send(User::whereHas('role', fn ($q) => $q->whereIn('role_name', ['admin', 'supervisor']))->get(), new TicketCreatedNotification($ticket));
 
         return redirect()->route('customer.tickets.show', $ticket)->with('success', "Tiket berhasil dibuat.");
     }
