@@ -135,6 +135,49 @@ php artisan test
 
 ---
 
+## Screenshots
+
+### Role: Administrator
+
+| Administrator Dashboard | Administrator Ticket |
+| :---: | :---: |
+|<img width="1468" height="776" alt="Screenshot 2026-07-29 193923" src="https://github.com/user-attachments/assets/05808d6e-babf-47b0-b2af-4d52206749f8" /> | <img width="1469" height="778" alt="Screenshot 2026-07-29 194302" src="https://github.com/user-attachments/assets/7f885079-4c9c-4c7a-875a-714206b56391" />|
+
+
+| Ticket Detail | Communication |
+| :---: | :---: |
+| <img width="1468" height="776" alt="Screenshot 2026-07-29 194047" src="https://github.com/user-attachments/assets/29f519b8-ae16-45c0-876d-1ab93975592a" /> | <img width="1468" height="776" alt="Screenshot 2026-07-29 200314" src="https://github.com/user-attachments/assets/4a73f507-6739-4d63-8e16-753b1f370d25" />|
+
+### Role: Supervisor
+
+| Supervisor Dashboard | Supervisor Ticket |
+| :---: | :---: |
+| <img width="1469" height="778" alt="Screenshot 2026-07-29 224911" src="https://github.com/user-attachments/assets/0635232f-9055-4c52-bf18-637fcc30a710" />|<img width="1469" height="778" alt="Screenshot 2026-07-29 224922" src="https://github.com/user-attachments/assets/29eac069-c288-4bab-a19c-df8d47f5e9d3" />|
+
+| Ticket Detail | Communication |
+| :---: | :---: |
+| <img width="1469" height="778" alt="Screenshot 2026-07-29 225003" src="https://github.com/user-attachments/assets/8c6ec674-c9ea-4cb9-b894-1ab304cc9035" />| <img width="1469" height="778" alt="Screenshot 2026-07-29 225009" src="https://github.com/user-attachments/assets/da51bf12-10ef-45a0-9e2b-493d90422ed7" />|
+
+### Role: Agent
+
+| Agent Dashboard | Agent Ticket |
+| :---: | :---: |
+| <img width="1469" height="776" alt="Screenshot 2026-07-29 230448" src="https://github.com/user-attachments/assets/f89b21c9-9c37-47fa-94a0-2f345c584ea1" />|<img width="1469" height="776" alt="Screenshot 2026-07-29 230116" src="https://github.com/user-attachments/assets/fdbc9582-9d85-4572-9b03-e100c2250718" />|
+
+| Ticket Detail | Communication |
+| :---: | :---: |
+| <img width="1469" height="777" alt="Screenshot 2026-07-29 230125" src="https://github.com/user-attachments/assets/335847fa-fd8c-4605-aa04-962dc21fabd3" />|<img width="1469" height="777" alt="image" src="https://github.com/user-attachments/assets/d52797d0-ae38-41fe-a72c-b71c9828b82e" />|
+
+### Role: Customer
+
+| Customer Dashboard | Customer Ticket |
+| :---: | :---: |
+| <img width="1468" height="776" alt="Screenshot 2026-07-29 201429" src="https://github.com/user-attachments/assets/fe116d38-8daf-42ba-b3ba-9dc0f964f982" />|<img width="1468" height="776" alt="Screenshot 2026-07-29 214709" src="https://github.com/user-attachments/assets/6071698a-4a34-43e3-955d-0535b580af61" /> |
+
+| Ticket Detail | Communication |
+| :---: | :---: |
+|<img width="1469" height="773" alt="Screenshot 2026-07-29 214735" src="https://github.com/user-attachments/assets/47b0a328-967e-4f15-bf68-57f869781e89" />|<img width="1469" height="773" alt="Screenshot 2026-07-29 214743" src="https://github.com/user-attachments/assets/cfe88f2a-1939-4d8b-98b3-ec4629a1a75b" />|
+
 ## Catatan Arsitektur
 
 Struktur aplikasi dipisah berdasarkan tanggung jawab, supaya controller tetap ringkas:
@@ -224,4 +267,15 @@ Content-Type: application/json
 * **Update comment real-time** belum ada — masih butuh refresh halaman untuk lihat komentar baru (belum pakai WebSocket/Laravel Reverb).
 * **Notifikasi SLA overdue** dijalankan lewat Artisan Command terjadwal (`tickets:check-sla-overdue`) — butuh cron/scheduler aktif di server produksi supaya jalan otomatis.
 
-<!-- TODO: tambahkan screenshot dashboard tiap role di sini kalau mau -->
+## Developer Confession
+
+Proyek ini adalah pengalaman pertama saya dalam beberapa hal, jadi saya rasa perlu untuk jujur soal proses belajarnya:
+
+- **Pertama kali memisahkan business logic ke dalam Service layer.** Sebelumnya saya biasa menaruh semua logic langsung di controller, jadi mendesain `TicketStatusService`, `TicketSlaService`, dan `ActivityLogger` sebagai layer terpisah adalah pengalaman baru sekaligus tantangan tersendiri dalam menata arsitektur aplikasi.
+- **Pertama kali membuat REST API** dari nol menggunakan Laravel, termasuk autentikasi berbasis token dengan Sanctum.
+- **Pertama kali menulis test** dalam project Laravel (menggunakan Pest). Butuh waktu yang lumayan lama untuk memahami requirement testing yang diberikan — mulai dari cara menyusun test case yang benar, memahami assertion yang sesuai, hingga menyesuaikan struktur kode agar lebih *testable*.
+- **Pertama kali menggunakan relasi Eloquent di luar one-to-one, one-to-many, dan many-to-many.** Saya baru mengenal relasi `morphTo` (polymorphic relation) di project ini, dan cukup memakan waktu untuk benar-benar memahami cara kerja serta kapan relasi ini seharusnya digunakan.
+- **Pertama kali menggunakan Queue Jobs dan Notification bawaan Laravel.** Konsep antrian (queue) untuk memproses notifikasi secara asynchronous ini baru bagi saya, sehingga saya perlu belajar dari dasar mengenai cara kerja queue worker, job dispatching, dan channel notifikasi (`mail` & `database`).
+
+Secara keseluruhan, project ini menjadi ajang belajar yang cukup intens — banyak konsep baru yang harus dipahami sekaligus diimplementasikan dalam waktu yang terbatas. Jika ada bagian dari kode yang masih bisa diperbaiki atau kurang optimal, itu murni karena masih dalam proses pembelajaran. Kritik dan saran sangat terbuka! 
+
