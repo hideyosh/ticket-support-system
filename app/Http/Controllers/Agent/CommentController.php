@@ -6,14 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCommentRequest;
 use App\Models\Comment;
 use App\Models\Ticket;
+use App\Notifications\TicketCommentedNotification;
 use App\Services\ActivityLogger;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 class CommentController extends Controller
 {
-    use AuthorizesRequests;
-
     public function store(StoreCommentRequest $request, Ticket $ticket)
     {
         $validated = $request->validated();
@@ -25,7 +24,7 @@ class CommentController extends Controller
                 'type'    => $validated['type'],
             ]);
 
-            if($validated['type'] === 'internal') {
+            if ($validated['type'] === 'internal') {
                 ActivityLogger::log($ticket, 'Internal comment added');
             } else {
                 ActivityLogger::log($ticket, 'Public comment added');
@@ -46,6 +45,12 @@ class CommentController extends Controller
 
                     ActivityLogger::log($ticket, 'Attachment uploaded');
                 }
+            }
+            if ($validated['type'] === 'internal_note') {
+                Notification::send(auth()->user()->team?->supervisor, new TicketCommentedNotification($comment));
+            }
+            if ($validated['type'] === 'public_comment') {
+                Notification::send($ticket->creator, new TicketCommentedNotification($comment));
             }
 
             return $comment;

@@ -15,10 +15,12 @@ use App\Models\User;
 use App\Services\TicketSlaService;
 use App\Services\TicketStatusService;
 use App\Exceptions\InvalidStatusTransitionException;
+use App\Notifications\TicketAssignedNotification;
 use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\View\View;
 
 class TicketController extends Controller
@@ -232,6 +234,8 @@ class TicketController extends Controller
         }
 
         $message = $newAgentId ? 'Agent berhasil di-assign ke tiket.' : 'Agent berhasil di-unassign dari tiket.';
+
+        Notification::send(User::where('id', $newAgentId)->get(), new TicketAssignedNotification($ticket));
 
         return redirect()->back()->with('success', $message);
     }

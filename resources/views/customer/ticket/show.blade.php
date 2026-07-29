@@ -207,6 +207,7 @@
                                 <input type="file" name="attachments[]" id="attachments"
                                     class="form-control form-control-sm" multiple>
                             </div>
+                            <input type="hidden" name="type" value="public_comment">
                         </div>
 
                         <div class="d-flex justify-content-end">

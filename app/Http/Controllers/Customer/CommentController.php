@@ -7,13 +7,10 @@ use App\Http\Requests\StoreCommentRequest;
 use App\Models\Ticket;
 use App\Models\Comment;
 use App\Services\ActivityLogger;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\DB;
 
 class CommentController extends Controller
 {
-    use AuthorizesRequests;
-
     public function store(StoreCommentRequest $request, Ticket $ticket)
     {
         $validated = $request->validated();

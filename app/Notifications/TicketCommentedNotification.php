@@ -50,7 +50,7 @@ class TicketCommentedNotification extends Notification
     /**
      * Route detail ticket beda per role -> sesuaikan URL berdasarkan role penerima.
      */
-    private function get(object $notifiable): string
+    private function getTicketUrl(object $notifiable): string
     {
         $ticket = $this->comment->ticket;
         $roleName = $notifiable->role?->role_name;

@@ -4,6 +4,10 @@ namespace App\Services;
 
 use App\Models\Ticket;
 use App\Exceptions\InvalidStatusTransitionException;
+use App\Models\User;
+use App\Notifications\TicketEscalatedNotification;
+use App\Notifications\TicketResolvedNotification;
+use Illuminate\Support\Facades\Notification;
 
 class TicketStatusService
 {
@@ -115,6 +119,23 @@ class TicketStatusService
         }
 
         $ticket->save();
+        
+        $this->sendStatusNotification($ticket, $newStatus);
+    }
+
+    private function sendStatusNotification(Ticket $ticket, string $newStatus): void
+    {
+        match ($newStatus) {
+            'escalated' => Notification::send(
+                User::whereIn('role_name', ['admin', 'supervisor'])->get(),
+                new TicketEscalatedNotification($ticket)
+            ),
+            'resolved' => Notification::send(
+                $ticket->creator,
+                new TicketResolvedNotification($ticket)
+            ),
+            default => null,
+        };
     }
 
     // -------------------------------------------------------------------------

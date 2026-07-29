@@ -194,6 +194,7 @@
                                     </div>
                                     <div class="col-md-5">
                                         <div class="form-check mt-md-4">
+                                            <input type="hidden" name="type" value="public_comment">
                                             <input class="form-check-input" type="checkbox" name="type"
                                                 value="internal_note" id="is_internal">
                                             <label class="form-check-label small fw-semibold text-warning-emphasis"
@@ -324,7 +325,7 @@
                             </h3>
                         </div>
                         <div class="card-body p-3">
-                            @if ($ticket->activityLogs && $ticket->activityLogs->count() > 0)
+                            @if ($ticket->activityLogs && $ticket->activityLogs->count() >   0)
                                 <ul class="list-group list-group-flush small">
                                     @foreach ($ticket->activityLogs as $log)
                                         <li class="list-group-item bg-transparent px-0 py-2 border-bottom-subtle">

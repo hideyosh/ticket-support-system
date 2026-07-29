@@ -197,6 +197,7 @@
                                     </div>
                                     <div class="col-md-5">
                                         <div class="form-check mt-md-4">
+                                            <input type="hidden" name="type" value="public_comment">
                                             <input class="form-check-input" type="checkbox" name="type"
                                                 value="internal_note" id="is_internal">
                                             <label class="form-check-label small fw-semibold text-warning-emphasis"

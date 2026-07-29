@@ -16,14 +16,11 @@ use App\Services\ActivityLogger;
 use App\Services\TicketSlaService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class TicketController extends Controller
 {
-    use AuthorizesRequests;
-
     public function index(Request $request): View
     {
         $tickets = Ticket::with(['category', 'priority', 'labels', 'assignedAgent'])

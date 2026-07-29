@@ -6,15 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCommentRequest;
 use App\Models\Comment;
 use App\Models\Ticket;
+use App\Notifications\TicketCommentedNotification;
 use App\Services\ActivityLogger;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 // use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 class CommentController extends Controller
 {
-    use AuthorizesRequests;
-
     public function store(StoreCommentRequest $request, Ticket $ticket)
     {
         $validated = $request->validated();
@@ -49,6 +48,13 @@ class CommentController extends Controller
 
             return $comment;
         });
+
+        if ($validated['type'] === 'internal_note') {
+            Notification::send($ticket->assignedAgent, new TicketCommentedNotification($comment));
+        }
+        if ($validated['type'] === 'public_comment') {
+            Notification::send($ticket->creator, new TicketCommentedNotification($comment));
+        }
 
         return back()->with('success', 'Komentar berhasil ditambahkan.');
     }
