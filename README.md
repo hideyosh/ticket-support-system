@@ -135,6 +135,53 @@ php artisan test
 
 ---
 
+## Screenshots
+
+### Role: Administrator
+
+| Administrator Dashboard | Administrator Ticket |
+| :---: | :---: |
+|<img width="1912" height="1087" alt="Screenshot 2026-07-29 193923" src="https://github.com/user-attachments/assets/05808d6e-babf-47b0-b2af-4d52206749f8" />
+| <img width="1917" height="1010" alt="Screenshot 2026-07-29 194302" src="https://github.com/user-attachments/assets/7f885079-4c9c-4c7a-875a-714206b56391" />|
+
+
+| Ticket Detail | Communication |
+| :---: | :---: |
+| <img width="1910" height="998" alt="Screenshot 2026-07-29 194047" src="https://github.com/user-attachments/assets/29f519b8-ae16-45c0-876d-1ab93975592a" />
+ | <img width="1917" height="1031" alt="Screenshot 2026-07-29 200314" src="https://github.com/user-attachments/assets/4a73f507-6739-4d63-8e16-753b1f370d25" />|
+
+### Role: Supervisor
+
+| Supervisor Dashboard | Supervisor Ticket |
+| :---: | :---: |
+| <img width="1468" height="776" alt="Image" src="https://github.com/user-attachments/assets/4e34df41-2341-42b5-b3ec-a51dc20674fe" /> | <img width="1469" height="778" alt="Image" src="https://github.com/user-attachments/assets/72977815-a227-4505-bbb6-26f614c714ad" /> |
+
+| Ticket Detail | Communication |
+| :---: | :---: |
+| <img width="1469" height="773" alt="Image" src="https://github.com/user-attachments/assets/a2d0ae8c-9cd5-4759-94c7-34a07db39a88" /> | <img width="1469" height="773" alt="Image" src="https://github.com/user-attachments/assets/c73cee0c-717f-47c3-95e2-a69aec5e9be8" /> |
+
+### Role: Agent
+
+| Agent Dashboard | Agent Ticket |
+| :---: | :---: |
+| <img width="1469" height="776" alt="Image" src="https://github.com/user-attachments/assets/9b7497e8-4ffe-4c51-ba17-fca384c24a47" /> | <img width="1469" height="777" alt="Image" src="https://github.com/user-attachments/assets/45f575d9-b7f9-47c0-8380-ca471f5cebe6" /> |
+
+| Ticket Detail | Communication |
+| :---: | :---: |
+| <img width="1469" height="778" alt="Image" src="https://github.com/user-attachments/assets/ea2fac7f-109d-4819-861c-2c220ff7efbc" /> | <img width="1469" height="777" alt="Image" src="https://github.com/user-attachments/assets/6bf16cd2-9251-4bf5-8285-11fe1d83b1a6" /> |
+
+### Role: Customer
+
+| Customer Dashboard | Customer Ticket |
+| :---: | :---: |
+| <img width="1469" height="775" alt="Image" src="https://github.com/user-attachments/assets/35d7c867-a4a6-4faf-98ac-3480999084b7" /> | <img width="1469" height="776" alt="Image" src="https://github.com/user-attachments/assets/6ed53210-5cd9-45b6-af74-61694d34ffcc" /> |
+
+| Ticket Detail | Communication |
+| :---: | :---: |
+| <img width="1469" height="775" alt="Image" src="https://github.com/user-attachments/assets/38ea8830-790e-4cd4-a508-4c08ca7d8c18" /> | <img width="1469" height="773" alt="Image" src="https://github.com/user-attachments/assets/7e4a268c-cd85-4a3e-92ba-25a81302d655" /> |
+
+
+
 ## Catatan Arsitektur
 
 Struktur aplikasi dipisah berdasarkan tanggung jawab, supaya controller tetap ringkas:
