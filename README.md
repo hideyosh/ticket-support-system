@@ -141,46 +141,42 @@ php artisan test
 
 | Administrator Dashboard | Administrator Ticket |
 | :---: | :---: |
-|<img width="1912" height="1087" alt="Screenshot 2026-07-29 193923" src="https://github.com/user-attachments/assets/05808d6e-babf-47b0-b2af-4d52206749f8" />
-| <img width="1917" height="1010" alt="Screenshot 2026-07-29 194302" src="https://github.com/user-attachments/assets/7f885079-4c9c-4c7a-875a-714206b56391" />|
+|<img width="1468" height="776" alt="Screenshot 2026-07-29 193923" src="https://github.com/user-attachments/assets/05808d6e-babf-47b0-b2af-4d52206749f8" /> | <img width="1469" height="778" alt="Screenshot 2026-07-29 194302" src="https://github.com/user-attachments/assets/7f885079-4c9c-4c7a-875a-714206b56391" />|
 
 
 | Ticket Detail | Communication |
 | :---: | :---: |
-| <img width="1910" height="998" alt="Screenshot 2026-07-29 194047" src="https://github.com/user-attachments/assets/29f519b8-ae16-45c0-876d-1ab93975592a" />
- | <img width="1917" height="1031" alt="Screenshot 2026-07-29 200314" src="https://github.com/user-attachments/assets/4a73f507-6739-4d63-8e16-753b1f370d25" />|
+| <img width="1468" height="776" alt="Screenshot 2026-07-29 194047" src="https://github.com/user-attachments/assets/29f519b8-ae16-45c0-876d-1ab93975592a" /> | <img width="1468" height="776" alt="Screenshot 2026-07-29 200314" src="https://github.com/user-attachments/assets/4a73f507-6739-4d63-8e16-753b1f370d25" />|
 
 ### Role: Supervisor
 
 | Supervisor Dashboard | Supervisor Ticket |
 | :---: | :---: |
-| <img width="1468" height="776" alt="Image" src="https://github.com/user-attachments/assets/4e34df41-2341-42b5-b3ec-a51dc20674fe" /> | <img width="1469" height="778" alt="Image" src="https://github.com/user-attachments/assets/72977815-a227-4505-bbb6-26f614c714ad" /> |
+| <img width="1469" height="778" alt="Screenshot 2026-07-29 224911" src="https://github.com/user-attachments/assets/0635232f-9055-4c52-bf18-637fcc30a710" />|<img width="1469" height="778" alt="Screenshot 2026-07-29 224922" src="https://github.com/user-attachments/assets/29eac069-c288-4bab-a19c-df8d47f5e9d3" />|
 
 | Ticket Detail | Communication |
 | :---: | :---: |
-| <img width="1469" height="773" alt="Image" src="https://github.com/user-attachments/assets/a2d0ae8c-9cd5-4759-94c7-34a07db39a88" /> | <img width="1469" height="773" alt="Image" src="https://github.com/user-attachments/assets/c73cee0c-717f-47c3-95e2-a69aec5e9be8" /> |
+| <img width="1469" height="778" alt="Screenshot 2026-07-29 225003" src="https://github.com/user-attachments/assets/8c6ec674-c9ea-4cb9-b894-1ab304cc9035" />| <img width="1469" height="778" alt="Screenshot 2026-07-29 225009" src="https://github.com/user-attachments/assets/da51bf12-10ef-45a0-9e2b-493d90422ed7" />|
 
 ### Role: Agent
 
 | Agent Dashboard | Agent Ticket |
 | :---: | :---: |
-| <img width="1469" height="776" alt="Image" src="https://github.com/user-attachments/assets/9b7497e8-4ffe-4c51-ba17-fca384c24a47" /> | <img width="1469" height="777" alt="Image" src="https://github.com/user-attachments/assets/45f575d9-b7f9-47c0-8380-ca471f5cebe6" /> |
+| <img width="1469" height="776" alt="Screenshot 2026-07-29 230448" src="https://github.com/user-attachments/assets/f89b21c9-9c37-47fa-94a0-2f345c584ea1" />|<img width="1469" height="776" alt="Screenshot 2026-07-29 230116" src="https://github.com/user-attachments/assets/fdbc9582-9d85-4572-9b03-e100c2250718" />|
 
 | Ticket Detail | Communication |
 | :---: | :---: |
-| <img width="1469" height="778" alt="Image" src="https://github.com/user-attachments/assets/ea2fac7f-109d-4819-861c-2c220ff7efbc" /> | <img width="1469" height="777" alt="Image" src="https://github.com/user-attachments/assets/6bf16cd2-9251-4bf5-8285-11fe1d83b1a6" /> |
+| <img width="1469" height="777" alt="Screenshot 2026-07-29 230125" src="https://github.com/user-attachments/assets/335847fa-fd8c-4605-aa04-962dc21fabd3" />|<img width="1469" height="777" alt="image" src="https://github.com/user-attachments/assets/d52797d0-ae38-41fe-a72c-b71c9828b82e" />|
 
 ### Role: Customer
 
 | Customer Dashboard | Customer Ticket |
 | :---: | :---: |
-| <img width="1469" height="775" alt="Image" src="https://github.com/user-attachments/assets/35d7c867-a4a6-4faf-98ac-3480999084b7" /> | <img width="1469" height="776" alt="Image" src="https://github.com/user-attachments/assets/6ed53210-5cd9-45b6-af74-61694d34ffcc" /> |
+| <img width="1468" height="776" alt="Screenshot 2026-07-29 201429" src="https://github.com/user-attachments/assets/fe116d38-8daf-42ba-b3ba-9dc0f964f982" />|<img width="1468" height="776" alt="Screenshot 2026-07-29 214709" src="https://github.com/user-attachments/assets/6071698a-4a34-43e3-955d-0535b580af61" /> |
 
 | Ticket Detail | Communication |
 | :---: | :---: |
-| <img width="1469" height="775" alt="Image" src="https://github.com/user-attachments/assets/38ea8830-790e-4cd4-a508-4c08ca7d8c18" /> | <img width="1469" height="773" alt="Image" src="https://github.com/user-attachments/assets/7e4a268c-cd85-4a3e-92ba-25a81302d655" /> |
-
-
+|<img width="1469" height="773" alt="Screenshot 2026-07-29 214735" src="https://github.com/user-attachments/assets/47b0a328-967e-4f15-bf68-57f869781e89" />|<img width="1469" height="773" alt="Screenshot 2026-07-29 214743" src="https://github.com/user-attachments/assets/cfe88f2a-1939-4d8b-98b3-ec4629a1a75b" />|
 
 ## Catatan Arsitektur
 
@@ -271,4 +267,3 @@ Content-Type: application/json
 * **Update comment real-time** belum ada — masih butuh refresh halaman untuk lihat komentar baru (belum pakai WebSocket/Laravel Reverb).
 * **Notifikasi SLA overdue** dijalankan lewat Artisan Command terjadwal (`tickets:check-sla-overdue`) — butuh cron/scheduler aktif di server produksi supaya jalan otomatis.
 
-<!-- TODO: tambahkan screenshot dashboard tiap role di sini kalau mau -->
