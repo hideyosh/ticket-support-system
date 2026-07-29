@@ -34,13 +34,19 @@
                 @endif
 
                 @if ($user->role->role_name === 'agent')
-                <li class="nav-item">
+                    @if ($user->team_id)
+                        <li class="nav-item">
                         <a href="{{ route('agent.teams.show', auth()->user()->team_id) }}"
                             class="nav-link {{ request()->routeIs('agent.teams.show') ? 'active' : '' }}">
                             <i class="nav-icon bi bi bi-people"></i>
                             <p>Team</p>
                         </a>
                     </li>
+                    @else
+                        <li class="nav-item">
+                            <span class="nav-link text-muted">Belum ada team</span>
+                        </li>
+                    @endif
                     <li class="nav-item">
                         <a href="{{ route('agent.tickets.index') }}"
                             class="nav-link {{ request()->routeIs('agent.tickets.*') ? 'active' : '' }}">

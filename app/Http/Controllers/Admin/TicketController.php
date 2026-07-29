@@ -16,6 +16,7 @@ use App\Services\TicketSlaService;
 use App\Services\TicketStatusService;
 use App\Exceptions\InvalidStatusTransitionException;
 use App\Notifications\TicketAssignedNotification;
+use App\Notifications\TicketCreatedNotification;
 use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -100,6 +101,7 @@ class TicketController extends Controller
 
             return $ticket;
         });
+        Notification::send(User::whereHas('role', fn($q) => $q->whereIn('role_name', ['admin', 'supervisor']))->get(), new TicketCreatedNotification($ticket));
 
         return redirect()->route('admin.tickets.show', $ticket)->with('success', "Tiket berhasil dibuat.");
     }
