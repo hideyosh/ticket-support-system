@@ -267,3 +267,15 @@ Content-Type: application/json
 * **Update comment real-time** belum ada — masih butuh refresh halaman untuk lihat komentar baru (belum pakai WebSocket/Laravel Reverb).
 * **Notifikasi SLA overdue** dijalankan lewat Artisan Command terjadwal (`tickets:check-sla-overdue`) — butuh cron/scheduler aktif di server produksi supaya jalan otomatis.
 
+## Developer Confession
+
+Proyek ini adalah pengalaman pertama saya dalam beberapa hal, jadi saya rasa perlu untuk jujur soal proses belajarnya:
+
+- **Pertama kali memisahkan business logic ke dalam Service layer.** Sebelumnya saya biasa menaruh semua logic langsung di controller, jadi mendesain `TicketStatusService`, `TicketSlaService`, dan `ActivityLogger` sebagai layer terpisah adalah pengalaman baru sekaligus tantangan tersendiri dalam menata arsitektur aplikasi.
+- **Pertama kali membuat REST API** dari nol menggunakan Laravel, termasuk autentikasi berbasis token dengan Sanctum.
+- **Pertama kali menulis test** dalam project Laravel (menggunakan Pest). Butuh waktu yang lumayan lama untuk memahami requirement testing yang diberikan — mulai dari cara menyusun test case yang benar, memahami assertion yang sesuai, hingga menyesuaikan struktur kode agar lebih *testable*.
+- **Pertama kali menggunakan relasi Eloquent di luar one-to-one, one-to-many, dan many-to-many.** Saya baru mengenal relasi `morphTo` (polymorphic relation) di project ini, dan cukup memakan waktu untuk benar-benar memahami cara kerja serta kapan relasi ini seharusnya digunakan.
+- **Pertama kali menggunakan Queue Jobs dan Notification bawaan Laravel.** Konsep antrian (queue) untuk memproses notifikasi secara asynchronous ini baru bagi saya, sehingga saya perlu belajar dari dasar mengenai cara kerja queue worker, job dispatching, dan channel notifikasi (`mail` & `database`).
+
+Secara keseluruhan, project ini menjadi ajang belajar yang cukup intens — banyak konsep baru yang harus dipahami sekaligus diimplementasikan dalam waktu yang terbatas. Jika ada bagian dari kode yang masih bisa diperbaiki atau kurang optimal, itu murni karena masih dalam proses pembelajaran. Kritik dan saran sangat terbuka! 
+
