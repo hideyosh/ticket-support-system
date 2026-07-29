@@ -1,286 +1,227 @@
-# CayDesk - Ticket Support System 
+# MyDesk - Ticket Support System
 
-A robust, role-based support ticket management system built with Laravel. This project is designed to handle interactions between Customers, Agents, Supervisors, and Administrators efficiently without letting the codebase turn into a spaghetti monster.
+Sistem manajemen tiket dukungan pelanggan berbasis role (Admin, Supervisor, Agent, Customer), dibangun dengan Laravel. Mendukung workflow status tiket, SLA tracking, activity log, notifikasi (email + dalam-app), dan REST API.
 
-## 📑 Table of Contents
+## 📑 Daftar Isi
 
-- [Project Overview](#project-overview)
-- [Feature Summary](#feature-summary)
+- [Ringkasan Fitur](#ringkasan-fitur)
 - [Tech Stack](#tech-stack)
-- [Installation & Environment Setup](#installation-env-setup)
-- [Running Tests](#running-tests)
-- [Seeded User Credentials](#seeded-user-credentials)
-- [Screenshots](#screenshots)
-- [Architecture Notes](#architecture-notes)
-- [Database Relationship Explanation](#database-relationship-explanation)
-- [API Examples](#api-examples)
-- [Known Limitations](#known-limitations)
-- [Developer Confession](#developer-confession)
+- [Instalasi & Setup](#instalasi--setup)
+- [Menjalankan Test](#menjalankan-test)
+- [Kredensial User Seeder](#kredensial-user-seeder)
+- [Catatan Arsitektur](#catatan-arsitektur)
+- [Relasi Database](#relasi-database)
+- [Contoh Pemakaian API](#contoh-pemakaian-api)
+- [Keterbatasan Saat Ini](#keterbatasan-saat-ini)
 
-<a id="project-overview"></a>
 ---
 
-## 🚀 Project Overview
-CayDesk provides a centralized platform for tracking, managing, and resolving customer issues. It features strict role-based access control (RBAC), SLA tracking, internal notes, file attachments, RESTful APIs, and comprehensive activity logging. The admin and agent interfaces are powered by Filament, ensuring a clean and responsive user experience.
-
-<a id="feature-summary"></a>
----
-
-## ✨ Feature Summary
+## Ringkasan Fitur
 
 ### Customer
-- Register and login
-- Create support tickets
-- View and track own tickets
-- Add public comments
-- Upload attachments
-- View recent activity history
-- Reopen resolved tickets (based on workflow)
+- Register & login
+- Membuat tiket baru
+- Melihat & melacak tiket miliknya sendiri (tidak bisa lihat tiket orang lain)
+- Menambahkan komentar publik
+- Upload lampiran
+- Melihat riwayat aktivitas ticket (versi simplified — tanpa detail old/new value)
 
 ### Agent
-- View assigned tickets
-- Update ticket status
-- Add comments and internal notes
-- Upload attachments
-- View recent activity history
-- Resolve tickets
+- Melihat tiket yang di-assign kepadanya saja
+- Menambahkan komentar (publik & internal note)
+- Upload lampiran
 
 ### Supervisor
-- Monitor team tickets
-- Assign and reassign tickets
-- Export reports
-- View overdue and escalated tickets
-- View recent activity history
+- Memantau tiket dari agent-agent dalam timnya
+- Assign / reassign ticket ke agent dalam timnya sendiri (tidak bisa assign ke agent tim lain)
+- Melihat halaman Activity Logs, dibatasi hanya untuk tiket timnya
+- Mengelola data tim
 
 ### Administrator
-- Full ticket management
-- User management
-- Category, Priority, Label management
-- SLA Rule management
-- Activity log management
-- Dashboard analytics
+- Manajemen tiket penuh (CRUD)
+- Manajemen user, role, kategori, prioritas, label, SLA rule, tim
+- Melihat seluruh Activity Log tanpa batasan
+- Assign ticket ke agent manapun
+- Mengubah status ticket (dengan validasi transisi)
 
-### System Features
-- Role-based access control (RBAC)
-- Ticket status workflow
-- SLA due-date calculation
-- Polymorphic file attachments
-- REST API using Sanctum
-- Activity logging
-- Queue-based notifications
-- Dashboard reporting
-- Pest test suite
+### Fitur Sistem
+- Role-based access control (RBAC) custom, lewat model `Role` + Laravel Policy (`TicketPolicy`, `CommentPolicy`, `UserPolicy`)
+- Workflow status tiket dengan validasi transisi ketat (`TicketStatusService`) — mencegah lompat status yang tidak valid (misal `open` langsung ke `resolved`)
+- Kalkulasi SLA due-date otomatis berdasarkan priority (`TicketSlaService`)
+- Lampiran file untuk ticket & comment, tervalidasi ukuran dan tipe file
+- Activity Log custom yang mencatat: siapa, aksi apa, ticket mana, nilai lama, nilai baru, kapan
+- Notifikasi lewat Laravel Notifications — channel **mail** dan **database** (bell icon di navbar), sebagian di-queue
+- REST API via Laravel Sanctum untuk operasi ticket dari luar aplikasi web
 
-<a id="tech-stack"></a>
 ---
 
-## 🛠️ Tech Stack
-* **Framework:** Laravel (v13)
-* **Admin Panel & UI:** FilamentPHP (v5) + Tailwind CSS
-* **Authentication & API:** Laravel Breeze & Laravel Sanctum
-* **Roles & Permissions:** Spatie Laravel Permission
-* **Activity Logging:** Spatie Activitylog
-* **Testing:** Pest PHP
+## Tech Stack
+
+* **Framework:** Laravel 13
+* **PHP:** 8.4
+* **Frontend:** Blade + Bootstrap 5 (AdminLTE-style layout)
+* **Autentikasi Web:** Laravel session-based auth
+* **Autentikasi API:** Laravel Sanctum (token-based)
 * **Database:** MySQL
+* **Testing:** Pest
+* **Mail testing (lokal):** Mailtrap / Log driver
 
-<a id="installation-env-setup"></a>
 ---
 
-## ⚙️ Installation & Environment Setup
+## Instalasi & Setup
 
-Follow these steps to get the project running on your local machine.
-
-1. **Clone the repository and install dependencies:**
+1. **Clone & install dependencies:**
    ```bash
-   git clone https://github.com/xnoname2003/caydesk.git
-   cd caydesk
+   git clone <https://github.com/hideyosh/ticket-support-system.git>
+   cd ticket-support-system
    composer install
    npm install && npm run build
    ```
 
-2. **Environment Setup:**
+2. **Setup environment:**
    ```bash
    cp .env.example .env
    php artisan key:generate
    ```
-   *Note: Configure your database settings in the `.env` file. For testing email notifications, set `MAIL_MAILER=log` or use Mailtrap.*
+   Sesuaikan koneksi database di `.env`. Untuk testing email secara lokal, set `MAIL_MAILER=log`, atau pakai Mailtrap (lihat kredensial di dashboard Mailtrap Anda, JANGAN commit ke repo).
 
-3. **Database Migration and Seeding:**
+3. **Migration & seeding:**
    ```bash
    php artisan migrate --seed
    ```
 
-4. **Storage Link Setup:**
-   *(Required for handling ticket and comment attachments)*
+4. **Storage link** (dibutuhkan untuk lampiran ticket/comment):
    ```bash
    php artisan storage:link
    ```
 
-5. **Queue Setup:**
-   *(Handled by our resident Queue Goblin 👺 to process emails and notifications)*
+5. **Setup API (Sanctum):**
+   ```bash
+   php artisan install:api
+   ```
+   *(Skip kalau `routes/api.php` dan tabel `personal_access_tokens` sudah ada.)*
+
+6. **Queue worker** (dibutuhkan untuk notifikasi yang di-queue, misal saat agent di-assign ticket):
    ```bash
    php artisan queue:work
    ```
 
-6. **Run the Application:**
+7. **Jalankan aplikasi:**
    ```bash
    php artisan serve
    ```
-   Access the app at `http://127.0.0.1:8000/`.
+   Akses di `http://127.0.0.1:8000/`.
 
-<a id="running-tests"></a>
 ---
 
-## 🧪 Running Tests
-
-To ensure everything is working correctly and the business logic is intact, run the test suite:
+## Menjalankan Test
 
 ```bash
 php artisan test
 ```
-*(Tests passed? Good. Now go touch grass. 🌱)*
 
-<a id="seeded-user-credentials"></a>
+<!-- TODO: dokumentasikan test suite di sini setelah dibuat (Feature Tests + Unit Tests) -->
+
 ---
 
-## 🔑 Seeded User Credentials
-
-The database seeder automatically creates the following users for testing purposes. All passwords are set to `password`.
+## Kredensial User Seeder
 
 | Role | Email | Password |
 | :--- | :--- | :--- |
-| **Admin** | `admin@admin.com` | `password` |
-| **Supervisor** | `supervisor@admin.com` | `password` |
-| **Agent** | `agent@admin.com` | `password` |
-| **Customer** | `customer@demo.com` | `password` |
+| **Admin** | `admin@example.com` | `password` |
+| **Supervisor** | `supervisor@example.com` | `password` |
+| **Agent** | `agent@example.com` | `password` |
+| **Customer** | `customer@example.com` | `password` |
 
-<a id="screenshots"></a>
 ---
 
-## 📸 Screenshots
+## Catatan Arsitektur
 
-### Role: Administrator
+Struktur aplikasi dipisah berdasarkan tanggung jawab, supaya controller tetap ringkas:
 
-| Administrator Dashboard | Administrator Ticket |
-| :---: | :---: |
-| <img width="1469" height="776" alt="Image" src="https://github.com/user-attachments/assets/4f4ee87b-5cac-4be0-9df2-c172a8097fa0" /> | <img width="1469" height="770" alt="Image" src="https://github.com/user-attachments/assets/5bb3f792-4d41-4117-9f76-ffedbb5b0245" /> |
+* **Controllers** (dipisah per role: `Admin/`, `Supervisor/`, `Agent/`, `Customer/`, `Api/`) — menangani HTTP layer & routing.
+* **Services** (`App\Services`):
+  - `TicketStatusService` — satu sumber kebenaran untuk aturan transisi status (`open → assigned → in_progress → resolved`, dst), mencegah transisi tidak valid lewat `InvalidStatusTransitionException`.
+  - `TicketSlaService` — kalkulasi `due_date` berdasarkan `SlaRule` dan priority ticket.
+  - `ActivityLogger` — helper terpusat untuk mencatat ke tabel `activity_logs` (siapa, aksi, ticket, field, old/new value).
+* **Policies** (`App\Policies`) — otorisasi ketat di level backend (`TicketPolicy`, `CommentPolicy`, `UserPolicy`), mencegah IDOR (misal customer mengakses ticket milik customer lain lewat manipulasi URL).
+* **Notifications** (`App\Notifications`) — 6 event notifikasi (ticket created, assigned, commented, resolved, escalated, SLA overdue), masing-masing lewat channel `mail` + `database`.
 
-| Ticket Detail | Communication |
-| :---: | :---: |
-| <img width="1469" height="773" alt="Image" src="https://github.com/user-attachments/assets/447f8256-bf0c-43ed-81db-524923089192" /> | <img width="1469" height="772" alt="Image" src="https://github.com/user-attachments/assets/e6f56266-aa30-4e87-a4e2-f4db5db2deb7" /> |
-
-### Role: Supervisor
-
-| Supervisor Dashboard | Supervisor Ticket |
-| :---: | :---: |
-| <img width="1468" height="776" alt="Image" src="https://github.com/user-attachments/assets/4e34df41-2341-42b5-b3ec-a51dc20674fe" /> | <img width="1469" height="778" alt="Image" src="https://github.com/user-attachments/assets/72977815-a227-4505-bbb6-26f614c714ad" /> |
-
-| Ticket Detail | Communication |
-| :---: | :---: |
-| <img width="1469" height="773" alt="Image" src="https://github.com/user-attachments/assets/a2d0ae8c-9cd5-4759-94c7-34a07db39a88" /> | <img width="1469" height="773" alt="Image" src="https://github.com/user-attachments/assets/c73cee0c-717f-47c3-95e2-a69aec5e9be8" /> |
-
-### Role: Agent
-
-| Agent Dashboard | Agent Ticket |
-| :---: | :---: |
-| <img width="1469" height="776" alt="Image" src="https://github.com/user-attachments/assets/9b7497e8-4ffe-4c51-ba17-fca384c24a47" /> | <img width="1469" height="777" alt="Image" src="https://github.com/user-attachments/assets/45f575d9-b7f9-47c0-8380-ca471f5cebe6" /> |
-
-| Ticket Detail | Communication |
-| :---: | :---: |
-| <img width="1469" height="778" alt="Image" src="https://github.com/user-attachments/assets/ea2fac7f-109d-4819-861c-2c220ff7efbc" /> | <img width="1469" height="777" alt="Image" src="https://github.com/user-attachments/assets/6bf16cd2-9251-4bf5-8285-11fe1d83b1a6" /> |
-
-### Role: Customer
-
-| Customer Dashboard | Customer Ticket |
-| :---: | :---: |
-| <img width="1469" height="775" alt="Image" src="https://github.com/user-attachments/assets/35d7c867-a4a6-4faf-98ac-3480999084b7" /> | <img width="1469" height="776" alt="Image" src="https://github.com/user-attachments/assets/6ed53210-5cd9-45b6-af74-61694d34ffcc" /> |
-
-| Ticket Detail | Communication |
-| :---: | :---: |
-| <img width="1469" height="775" alt="Image" src="https://github.com/user-attachments/assets/38ea8830-790e-4cd4-a508-4c08ca7d8c18" /> | <img width="1469" height="773" alt="Image" src="https://github.com/user-attachments/assets/7e4a268c-cd85-4a3e-92ba-25a81302d655" /> |
-
-<a id="architecture-notes"></a>
 ---
 
-## 🏗️ Architecture Notes
+## Relasi Database
 
-To keep the controllers clean and maintainable, the application uses a structured approach:
-* **Controllers & Filament Resources:** Handle the HTTP layer, routing, and UI presentation.
-* **Services (`App\Services`):** Business logic is abstracted here. For example, `TicketStatusService` centrally handles all allowed status transition rules so we don't have random `if/else` soups in the controllers.
-* **Observers (`App\Observers`):** Event-driven logic (like sending notifications when a ticket is created or a comment is posted) is handled by `TicketObserver` to adhere to the Single Responsibility Principle.
-* **Policies:** Strict backend authorization using Laravel Policies to prevent unauthorized IDOR attacks and data leaks.
+* **User & Team:** `Team belongsTo User (supervisor)`, `User belongsTo Team`. Satu supervisor mengelola satu tim, agent-agent ditempatkan di tim itu lewat `team_id`.
+* **Ticket:** `Ticket belongsTo User (creator via created_by)`, `Ticket belongsTo User (assignedAgent via assigned_to)`.
+* **Master data:** Ticket punya `Category`, `Priority` (belongsTo), dan `Label` (many-to-many lewat pivot).
+* **Lampiran:** `Ticket hasMany Attachment`, `Comment hasMany Attachment` — masing-masing menyimpan `uploaded_by`, path file, mime type, dan ukuran.
+* **Activity Log:** `ActivityLog belongsTo User` (pelaku) dan `belongsTo Ticket` — kolom eksplisit `action`, `field`, `old_value`, `new_value`, `created_at`.
 
-<a id="database-relationship-explanation"></a>
 ---
 
-## 🗄️ Database Relationship Explanation
+## Contoh Pemakaian API
 
-The database is highly relational to support the RBAC and tracking requirements:
-* **Users & Teams:** `Team hasMany Users`. A Supervisor monitors a specific team, and Agents belong to a single team.
-* **Tickets:** `Ticket belongsTo User (Creator)` and `Ticket belongsTo User (Assigned Agent)`.
-* **Master Data:** Tickets are categorized by `Category`, have a specific `Priority`, and can be tagged with multiple `Labels` (Many-to-Many).
-* **Polymorphic Attachments:** `Ticket morphMany Attachment` and `Comment morphMany Attachment`. Files are linked dynamically to the relevant model.
-* **Activity Logs:** Spatie Activitylog tracks actions globally, storing polymorphic relationships (`subject_type`, `subject_id`) to display precise role-based logs.
-
-<a id="api-examples"></a>
----
-
-## 🔌 API Examples
-
-The system provides a REST API via Laravel Sanctum for customers to interact with their tickets remotely.
-
-**1. Authentication (Get Token)**
+**1. Login (dapat token):**
 ```http
 POST /api/login
 Content-Type: application/json
 
 {
-  "email": "customer@demo.com",
-  "password": "password"
+  "email": "customer@example.com",
+  "password": "password",
+  "device_name": "postman"
 }
 ```
 
-**2. Create a Ticket**
+**2. Buat ticket:**
 ```http
 POST /api/tickets/create
-Authorization: Bearer {your_token}
+Authorization: Bearer {token}
 Content-Type: application/json
 
 {
-  "title": "Cannot login after password reset",
-  "description": "I tried resetting my password but the link is expired.",
-  "category_id": {category_id},
-  "priority_id": {priority_id},
-  "labels[0]": {labels_id[0]},
-  "labels[1]": {labels_id[1]},
-  "labels[2]": {labels_id[2]},
+  "title": "Tidak bisa login setelah reset password",
+  "description": "Link reset password sudah expired.",
+  "category_id": 1,
+  "priority_id": 2,
+  "labels": [1, 3]
 }
 ```
 
-**3. List My Tickets**
+**3. List ticket milik user yang login:**
 ```http
 GET /api/tickets
-Authorization: Bearer {your_token}
+Authorization: Bearer {token}
 ```
 
-<a id="known-limitations"></a>
+**4. Assign agent** *(admin/supervisor):*
+```http
+PATCH /api/tickets/{ticket}/assign
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "assigned_to": 5
+}
+```
+
+**5. Ubah status ticket:**
+```http
+PATCH /api/tickets/{ticket}/status
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "status": "resolved"
+}
+```
+
 ---
 
-## ⚠️ Known Limitations
-* **SLA Calculation:** Currently, the SLA due-date calculation operates linearly and does not account for business hours, weekends, or public holidays.
-* **Real-time Updates:** Ticket comments require a page refresh to appear. Real-time broadcasting via WebSockets (Laravel Reverb) is planned but not yet implemented.
-* **Exporting:** Reports are exported synchronously. For massive datasets, this logic should be refactored into a queued background job.
+## Keterbatasan Saat Ini
 
----
-<a id="developer-confession"></a>
+* **Kalkulasi SLA** masih linear — belum memperhitungkan jam kerja, akhir pekan, atau hari libur.
+* **Update comment real-time** belum ada — masih butuh refresh halaman untuk lihat komentar baru (belum pakai WebSocket/Laravel Reverb).
+* **Notifikasi SLA overdue** dijalankan lewat Artisan Command terjadwal (`tickets:check-sla-overdue`) — butuh cron/scheduler aktif di server produksi supaya jalan otomatis.
 
-## 🤫 Developer Confession
-
-* **What part was hardest?**
-  Writing the Activity Log scope filters. Finding the perfect balance between displaying all relevant actions for Agents and Supervisors without accidentally exposing system-wide master data changes (which only Admins should see) took a lot of polymorphic querying.
-* **What shortcut did you take?**
-  I leaned heavily on Filament v5's internal component wrappers for the frontend. Building out the dashboards and data tables from scratch using pure Tailwind + Blade would have taken significantly longer.
-* **What would you improve with more time?**
-  I would implement Laravel Reverb for real-time ticket comment updates and notifications. Waiting for a page reload feels a bit vintage for a modern helpdesk.
-* **Which part of the code is most cursed but still works?**
-  The manual nested `orWhereHasMorph` checks injected directly into the `RecentActivityWidget` query builder. I considered using Global Scopes, but it felt too risky for the Admin panel side. It looks like a linguistic maze of closures, but it serves as an ironclad defense against data leakage.
+<!-- TODO: tambahkan screenshot dashboard tiap role di sini kalau mau -->
